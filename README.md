@@ -145,8 +145,7 @@ The result is clamped to a comfort score range and converted into statuses such 
 
 ## Deployment Links
 
-- GitHub repo: TODO
-- Frontend URL (Vercel): TODO
-- Backend URL (Railway): TODO
-
-Fill these in after deployment.
+- GitHub Repository: https://github.com/medina200812-max/atriumiq
+- Frontend (Vercel): https://atriumiq.vercel.app
+- Backend (Railway): https://atriumiq-production.up.railway.app
+- API Documentation: https://atriumiq-production.up.railway.app/docs
