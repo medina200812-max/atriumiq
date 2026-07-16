@@ -1256,6 +1256,13 @@
         color: var(--text-faint);
         flex-shrink: 0;
       }
+      .rs-actions {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .rs-action,
       .rs-delete {
         border: 1px solid rgba(255, 255, 255, 0.12);
         background: rgba(255, 255, 255, 0.06);
@@ -1266,9 +1273,87 @@
         cursor: pointer;
         flex-shrink: 0;
       }
+      .rs-action:hover {
+        color: var(--gold-soft);
+        border-color: rgba(239, 211, 135, 0.35);
+      }
       .rs-delete:hover {
         color: #ff9b7a;
         border-color: rgba(255, 155, 122, 0.35);
+      }
+      .report-modal {
+        position: fixed;
+        inset: 0;
+        z-index: 90;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        background: rgba(0, 10, 24, 0.64);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+      }
+      .report-modal.active {
+        display: flex;
+      }
+      .report-modal-card {
+        width: min(480px, 100%);
+        padding: 24px 26px;
+      }
+      .report-modal-form {
+        display: grid;
+        gap: 12px;
+        margin-top: 16px;
+      }
+      .report-modal-form label {
+        font-size: 10.5px;
+        color: var(--text-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .report-modal-form select,
+      .report-modal-form input,
+      .report-modal-form textarea {
+        width: 100%;
+        margin-top: 5px;
+        padding: 10px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--glass-border);
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--white);
+        font-family: var(--font-body);
+        font-size: 12.5px;
+        outline: none;
+      }
+      .report-modal-form textarea {
+        min-height: 96px;
+        resize: vertical;
+      }
+      .report-modal-form select:focus,
+      .report-modal-form input:focus,
+      .report-modal-form textarea:focus {
+        border-color: var(--gold);
+      }
+      .report-modal-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 6px;
+      }
+      .report-secondary {
+        padding: 12px 16px;
+        border-radius: 10px;
+        border: 1px solid var(--glass-border);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-weight: 700;
+        cursor: pointer;
+      }
+      .report-error {
+        min-height: 16px;
+        color: #ff9b7a;
+        font-size: 11.5px;
       }
 
       footer {
@@ -1372,6 +1457,33 @@
         }
         .report-options {
           grid-template-columns: repeat(2, 1fr);
+        }
+        .rs-feed-item {
+          align-items: flex-start;
+          flex-wrap: wrap;
+        }
+        .rs-feed-item .txt {
+          flex-basis: 100%;
+          order: 2;
+        }
+        .rs-feed-item .time {
+          margin-left: auto;
+        }
+        .report-modal {
+          align-items: flex-end;
+          padding: 12px;
+        }
+        .report-modal-card {
+          padding: 20px;
+          max-height: calc(100vh - 24px);
+          overflow-y: auto;
+        }
+        .report-modal-actions {
+          flex-direction: column-reverse;
+        }
+        .report-modal-actions .report-submit,
+        .report-modal-actions .report-secondary {
+          width: 100%;
         }
       }
 
@@ -1988,26 +2100,25 @@
             <table>
               <thead>
                 <tr>
-                  <th data-sort="date">
-                    Timestamp <span class="arrow">↕</span>
+                  <th data-sort="measured_at">
+                    Time <span class="arrow">↕</span>
                   </th>
-                  <th data-sort="atrium_temp">
-                    Atrium °C <span class="arrow">↕</span>
+                  <th data-sort="location">
+                    Location <span class="arrow">↕</span>
                   </th>
-                  <th data-sort="outside_temp">
-                    Outside °C <span class="arrow">↕</span>
+                  <th data-sort="temperature">
+                    Temperature <span class="arrow">↕</span>
                   </th>
-                  <th data-sort="diff">Δ °C <span class="arrow">↕</span></th>
+                  <th data-sort="noise">Noise <span class="arrow">↕</span></th>
                   <th data-sort="brightness">
                     Brightness <span class="arrow">↕</span>
                   </th>
-                  <th data-sort="noise">Noise <span class="arrow">↕</span></th>
                 </tr>
               </thead>
               <tbody id="historyBody"></tbody>
             </table>
             <div class="table-empty" id="historyEmpty" style="display: none">
-              No readings match these filters.
+              No measurements found.
             </div>
           </div>
         </div>
@@ -2065,6 +2176,37 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      <div class="report-modal" id="reportEditModal" aria-hidden="true">
+        <div class="report-modal-card card" role="dialog" aria-modal="true" aria-labelledby="reportEditTitle">
+          <div class="chart-title" id="reportEditTitle">Edit report</div>
+          <div class="chart-sub" id="reportEditSub" style="margin-top: 4px">
+            Update the report details saved in FastAPI.
+          </div>
+          <form class="report-modal-form" id="reportEditForm">
+            <label>
+              <span data-i18n="category">Category</span>
+              <select id="editReportCategory" required></select>
+            </label>
+            <label>
+              <span data-i18n="location">Location</span>
+              <input id="editReportLocation" type="text" required />
+            </label>
+            <label>
+              <span data-i18n="description">Description</span>
+              <textarea id="editReportDescription" maxlength="240"></textarea>
+            </label>
+            <label>
+              <span data-i18n="status">Status</span>
+              <select id="editReportStatus" required></select>
+            </label>
+            <div class="report-error" id="reportEditError"></div>
+            <div class="report-modal-actions">
+              <button class="report-secondary" id="cancelReportEdit" type="button">Cancel</button>
+              <button class="report-submit" id="saveReportEdit" type="submit">Save</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -2530,7 +2672,10 @@
           timestamp: "Timestamp",
           atriumC: "Atrium °C",
           outsideC: "Outside °C",
-          noHistory: "No readings match these filters.",
+          time: "Time",
+          noHistory: "No measurements found.",
+          historyLoading: "Loading measurements...",
+          historyError: "Failed to load measurements.",
           studentReports: "Student Reports",
           reportPrompt: "How does the atrium feel right now?",
           reportSub:
@@ -2549,6 +2694,19 @@
           thanksApi: "Thanks — your report was saved in FastAPI.",
           failApi:
             "Could not submit to FastAPI. Is the backend running on port 8000?",
+          edit: "Edit",
+          save: "Save",
+          cancel: "Cancel",
+          saving: "Saving...",
+          category: "Category",
+          description: "Description",
+          status: "Status",
+          editReport: "Edit report",
+          editReportSub: "Update the report details saved in FastAPI.",
+          updateFail: "Could not update this report. Please try again.",
+          openStatus: "open",
+          inReviewStatus: "in_review",
+          resolvedStatus: "resolved",
           liveMood: "Live mood",
           satisfaction: "{rate}% satisfaction, top issue: {issue}",
           reportCount: "{count} reports",
@@ -2717,7 +2875,10 @@
           timestamp: "Уақыт",
           atriumC: "Атриум °C",
           outsideC: "Сырт °C",
-          noHistory: "Бұл фильтрге сәйкес өлшем жоқ.",
+          time: "Уақыт",
+          noHistory: "Өлшем табылмады.",
+          historyLoading: "Өлшемдер жүктелуде...",
+          historyError: "Өлшемдерді жүктеу сәтсіз аяқталды.",
           studentReports: "Студент хабарламалары",
           reportPrompt: "Атриум қазір қалай сезіледі?",
           reportSub:
@@ -2734,6 +2895,19 @@
           failReport: "Қазір жіберілмеді — қайта көріңіз.",
           thanksApi: "Рақмет — хабарлама FastAPI-да сақталды.",
           failApi: "FastAPI-ға жіберілмеді. Backend 8000 портында қосулы ма?",
+          edit: "Өңдеу",
+          save: "Сақтау",
+          cancel: "Бас тарту",
+          saving: "Сақталуда...",
+          category: "Санат",
+          description: "Сипаттама",
+          status: "Күйі",
+          editReport: "Хабарламаны өңдеу",
+          editReportSub: "FastAPI-да сақталған хабарлама мәліметтерін жаңарту.",
+          updateFail: "Бұл хабарламаны жаңарту мүмкін болмады. Қайта көріңіз.",
+          openStatus: "open",
+          inReviewStatus: "in_review",
+          resolvedStatus: "resolved",
           liveMood: "Live mood",
           satisfaction: "{rate}% қанағаттану, басты мәселе: {issue}",
           reportCount: "{count} хабарлама",
@@ -2898,7 +3072,10 @@
           timestamp: "Время",
           atriumC: "Атриум °C",
           outsideC: "Улица °C",
-          noHistory: "Нет измерений по этим фильтрам.",
+          time: "Время",
+          noHistory: "Измерения не найдены.",
+          historyLoading: "Загрузка измерений...",
+          historyError: "Не удалось загрузить измерения.",
           studentReports: "Отзывы студентов",
           reportPrompt: "Как ощущается атриум сейчас?",
           reportSub:
@@ -2916,6 +3093,19 @@
           thanksApi: "Спасибо — отзыв сохранен в FastAPI.",
           failApi:
             "Не удалось отправить в FastAPI. Backend запущен на порту 8000?",
+          edit: "Редактировать",
+          save: "Сохранить",
+          cancel: "Отмена",
+          saving: "Сохранение...",
+          category: "Категория",
+          description: "Описание",
+          status: "Статус",
+          editReport: "Редактировать отзыв",
+          editReportSub: "Обновите данные отзыва, сохраненного в FastAPI.",
+          updateFail: "Не удалось обновить этот отзыв. Попробуйте еще раз.",
+          openStatus: "open",
+          inReviewStatus: "in_review",
+          resolvedStatus: "resolved",
           liveMood: "Live mood",
           satisfaction: "{rate}% удовлетворенности, главная проблема: {issue}",
           reportCount: "{count} отзывов",
@@ -3063,8 +3253,24 @@
         Comfortable: "comfortable",
         Other: "other",
       };
+      const STATUS_LABELS = {
+        open: "openStatus",
+        in_review: "inReviewStatus",
+        resolved: "resolvedStatus",
+      };
       function reportTypeLabel(type) {
         return tx(REPORT_LABELS[type] || "other");
+      }
+      function statusLabel(status) {
+        return tx(STATUS_LABELS[status] || "openStatus");
+      }
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#39;");
       }
       function applyStaticTranslations() {
         document.title = tx("pageTitle");
@@ -3213,12 +3419,11 @@
         document.querySelectorAll("thead th").forEach((el, i) => {
           el.innerHTML =
             [
-              tx("timestamp"),
-              tx("atriumC"),
-              tx("outsideC"),
-              "Δ °C",
-              tx("brightness"),
+              tx("time"),
+              tx("location"),
+              tx("temperature"),
               tx("noise"),
+              tx("brightness"),
             ][i] + ' <span class="arrow">↕</span>';
         });
         setText("#historyEmpty", tx("noHistory"));
@@ -3237,6 +3442,13 @@
         document.querySelectorAll(".table-empty").forEach((el) => {
           if (el.id !== "historyEmpty") el.textContent = tx("emptyReports");
         });
+        setText("#reportEditTitle", tx("editReport"));
+        setText("#reportEditSub", tx("editReportSub"));
+        document
+          .querySelectorAll("[data-i18n]")
+          .forEach((el) => (el.textContent = tx(el.dataset.i18n)));
+        setText("#cancelReportEdit", tx("cancel"));
+        setText("#saveReportEdit", tx("save"));
       }
       document.querySelectorAll(".lang-btn").forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -3872,27 +4084,109 @@
       });
 
       /* ---------------- History table ---------------- */
-      const dateSet = [...new Set(DATA.map((d) => d.date.slice(0, 10)))].sort();
       const fDate = document.getElementById("fDate");
-      dateSet.forEach((d) => {
-        const o = document.createElement("option");
-        o.value = d;
-        o.textContent = d;
-        fDate.appendChild(o);
+      const demoHistoryReadings = DATA.flatMap((r, index) => {
+        const rows = [
+          {
+            id: `demo-a-${index}`,
+            measured_at: r.date,
+            location: "atrium",
+            temperature: r.atrium_temp,
+            brightness: r.brightness,
+            noise: r.noise,
+          },
+        ];
+        if (r.outside_temp != null) {
+          rows.push({
+            id: `demo-o-${index}`,
+            measured_at: r.date,
+            location: "outside",
+            temperature: r.outside_temp,
+            brightness: null,
+            noise: null,
+          });
+        }
+        return rows;
       });
-
-      let sortKey = "date",
+      let historyReadings = demoHistoryReadings.slice();
+      let historyState = "ready";
+      let sortKey = "measured_at",
         sortDir = -1;
+
+      function setHistoryReadings(readings, state = "ready") {
+        historyReadings = Array.isArray(readings) ? readings.slice() : [];
+        historyState = state;
+        updateHistoryDateOptions();
+        renderHistory();
+      }
+
+      function setHistoryState(state) {
+        historyState = state;
+        renderHistory();
+      }
+
+      function updateHistoryDateOptions() {
+        const currentValue = fDate.value || "all";
+        const dates = [
+          ...new Set(
+            historyReadings
+              .map((r) => String(r.measured_at || "").slice(0, 10))
+              .filter(Boolean),
+          ),
+        ].sort();
+        fDate.innerHTML = `<option value="all">${tx("allDates")}</option>`;
+        dates.forEach((d) => {
+          const o = document.createElement("option");
+          o.value = d;
+          o.textContent = d;
+          fDate.appendChild(o);
+        });
+        fDate.value = [...fDate.options].some((o) => o.value === currentValue)
+          ? currentValue
+          : "all";
+      }
+
+      function historyCell(value, kind) {
+        if (value == null || value === "") return "N/A";
+        if (kind === "noise") {
+          return `<span class="badge" style="background:${noiseColor(value)}22; color:${noiseColor(value)}">${localNoise(value)}</span>`;
+        }
+        if (kind === "brightness") {
+          return `<span class="badge" style="background:${brightColor(value)}22; color:${brightColor(value)}">${localBright(value)}</span>`;
+        }
+        return escapeHtml(value);
+      }
+
       function renderHistory() {
         const loc = document.getElementById("fLocation").value;
         const dateVal = fDate.value;
         const tMin = parseFloat(document.getElementById("fTempMin").value);
         const tMax = parseFloat(document.getElementById("fTempMax").value);
+        const tbody = document.getElementById("historyBody");
+        const empty = document.getElementById("historyEmpty");
 
-        let rows = DATA.filter((r) => {
-          if (dateVal !== "all" && !r.date.startsWith(dateVal)) return false;
-          if (!isNaN(tMin) && r.atrium_temp < tMin) return false;
-          if (!isNaN(tMax) && r.atrium_temp > tMax) return false;
+        if (historyState === "loading") {
+          tbody.innerHTML = "";
+          empty.textContent = tx("historyLoading");
+          empty.style.display = "block";
+          return;
+        }
+        if (historyState === "error" && !historyReadings.length) {
+          tbody.innerHTML = "";
+          empty.textContent = tx("historyError");
+          empty.style.display = "block";
+          return;
+        }
+
+        let rows = historyReadings.filter((reading) => {
+          if (
+            dateVal !== "all" &&
+            !String(reading.measured_at || "").startsWith(dateVal)
+          )
+            return false;
+          if (loc !== "all" && reading.location !== loc) return false;
+          if (!isNaN(tMin) && reading.temperature < tMin) return false;
+          if (!isNaN(tMax) && reading.temperature > tMax) return false;
           return true;
         });
 
@@ -3901,32 +4195,36 @@
             bv = b[sortKey];
           if (av == null) av = -Infinity;
           if (bv == null) bv = -Infinity;
-          if (typeof av === "string" && sortKey !== "date") {
-            av = noiseRank(a.noise ?? a.brightness);
-            bv = noiseRank(b.noise ?? b.brightness);
+          if (sortKey === "measured_at") {
+            av = new Date(a.measured_at).getTime();
+            bv = new Date(b.measured_at).getTime();
+          } else if (sortKey === "noise") {
+            av = a.noise == null ? -1 : noiseRank(a.noise);
+            bv = b.noise == null ? -1 : noiseRank(b.noise);
+          } else if (sortKey === "brightness") {
+            av = a.brightness == null ? -1 : brightRank(a.brightness);
+            bv = b.brightness == null ? -1 : brightRank(b.brightness);
+          } else if (sortKey === "temperature") {
+            av = Number(a.temperature);
+            bv = Number(b.temperature);
           }
           if (av < bv) return -1 * sortDir;
           if (av > bv) return 1 * sortDir;
           return 0;
         });
 
-        const tbody = document.getElementById("historyBody");
         tbody.innerHTML = "";
-        document.getElementById("historyEmpty").style.display = rows.length
-          ? "none"
-          : "block";
+        empty.textContent = tx("noHistory");
+        empty.style.display = rows.length ? "none" : "block";
 
         rows.forEach((r) => {
           const tr = document.createElement("tr");
-          const showAtrium = loc !== "outside";
-          const showOutside = loc !== "atrium";
           tr.innerHTML = `
-      <td>${fmtTime(r.date)}</td>
-      <td>${showAtrium ? r.atrium_temp.toFixed(2) : "—"}</td>
-      <td>${showOutside && r.outside_temp != null ? r.outside_temp.toFixed(1) : "—"}</td>
-      <td>${r.diff != null ? (r.diff > 0 ? "+" : "") + r.diff.toFixed(1) : "—"}</td>
-      <td><span class="badge" style="background:${brightColor(r.brightness)}22; color:${brightColor(r.brightness)}">${localBright(r.brightness)}</span></td>
-      <td><span class="badge" style="background:${noiseColor(r.noise)}22; color:${noiseColor(r.noise)}">${localNoise(r.noise)}</span></td>`;
+      <td>${fmtTime(r.measured_at)}</td>
+      <td>${r.location === "outside" ? tx("outside") : tx("atrium")}</td>
+      <td>${Number(r.temperature).toFixed(1)}°C</td>
+      <td>${historyCell(r.noise, "noise")}</td>
+      <td>${historyCell(r.brightness, "brightness")}</td>`;
           tbody.appendChild(tr);
         });
       }
@@ -3945,6 +4243,7 @@
           renderHistory();
         });
       });
+      updateHistoryDateOptions();
       renderHistory();
 
       /* ---------------- Reports ---------------- */
@@ -4047,9 +4346,16 @@
             (r) => `
     <div class="rs-feed-item">
       <span class="badge" style="background:${REPORT_COLORS[r.type]}22; color:${REPORT_COLORS[r.type]}">${REPORT_ICONS[r.type]} ${reportTypeLabel(r.type)}</span>
-      <span class="txt">${r.description || tx("atriumReport")}</span>
+      <span class="txt">${escapeHtml(r.description || tx("atriumReport"))}</span>
       <span class="time">${fmtTime(r.time)}</span>
-      <button class="rs-delete" type="button" ${r.id ? `data-api-id="${r.id}"` : `data-report-time="${r.time}"`} aria-label="Delete report">×</button>
+      <span class="rs-actions">
+        ${
+          r.id
+            ? `<button class="rs-action rs-edit" type="button" data-api-id="${r.id}" aria-label="${tx("edit")}">✎</button>`
+            : ""
+        }
+        <button class="rs-delete" type="button" ${r.id ? `data-api-id="${r.id}"` : `data-report-time="${escapeHtml(r.time)}"`} aria-label="Delete report">×</button>
+      </span>
     </div>`,
           )
           .join("");
@@ -4115,6 +4421,9 @@
         const statusText = statusPill?.childNodes[1];
         const statusDot = statusPill?.querySelector(".dot");
         let apiReportsWired = false;
+        let apiReportCache = [];
+        let editingReportId = null;
+        let historyHasLiveData = false;
 
         function setApiStatus(text, ok = true) {
           if (statusText) statusText.textContent = text;
@@ -4306,45 +4615,27 @@
           ]);
         }
 
-        function renderLiveHistory(history) {
-          const rows = history.map(normalizeReading);
-          const fDate = document.getElementById("fDate");
-          [...new Set(rows.map((r) => r.date.slice(0, 10)))]
-            .sort()
-            .forEach((d) => {
-              if (![...fDate.options].some((o) => o.value === d)) {
-                const option = document.createElement("option");
-                option.value = d;
-                option.textContent = d;
-                fDate.appendChild(option);
-              }
-            });
-          const tbody = document.getElementById("historyBody");
-          tbody.innerHTML = rows
-            .map(
-              (r) => `
-      <tr>
-        <td>${fmtTime(r.date)}</td>
-        <td>${r.atrium_temp.toFixed(2)}</td>
-        <td>${r.outside_temp.toFixed(1)}</td>
-        <td>${r.diff >= 0 ? "+" : ""}${r.diff.toFixed(1)}</td>
-        <td><span class="badge" style="background:${brightColor(r.brightness)}22; color:${brightColor(r.brightness)}">${Math.round(r.brightness_lux)} lux · ${localBright(r.brightness)}</span></td>
-        <td><span class="badge" style="background:${noiseColor(r.noise)}22; color:${noiseColor(r.noise)}">${Math.round(r.noise_db)} dB · ${localNoise(r.noise)}</span></td>
-      </tr>`,
-            )
-            .join("");
-          document.getElementById("historyEmpty").style.display = rows.length
-            ? "none"
-            : "block";
+        function normalizeApiReading(r) {
+          return {
+            id: r.id,
+            measured_at: r.measured_at,
+            location: r.location,
+            temperature: r.temperature,
+            brightness: r.brightness,
+            noise: r.noise,
+          };
         }
 
         function renderApiReports(reports, mood) {
+          apiReportCache = Array.isArray(reports) ? reports.slice() : [];
           const mapped = reports.map((r) => ({
             id: r.id,
             type: r.category,
-            time: r.timestamp,
+            time: r.timestamp || r.created_at || r.measured_at,
             description: r.description,
             author: r.author,
+            location: r.location,
+            status: r.status,
           }));
           renderReportStats(mapped);
           if (mood) {
@@ -4358,6 +4649,58 @@
                 `<div class="rs-feed-item"><span class="badge" style="background:#7BBDE822; color:#7BBDE8">${tx("liveMood")}</span><span class="txt">${tx("satisfaction", { rate: mood.satisfaction_rate, issue: topIssue })}</span><span class="time">${tx("reportCount", { count: mood.total_reports })}</span></div>`,
               );
           }
+        }
+
+        function fillReportEditOptions() {
+          const categorySelect = document.getElementById("editReportCategory");
+          const statusSelect = document.getElementById("editReportStatus");
+          if (!categorySelect || !statusSelect) return;
+          categorySelect.innerHTML = REPORT_TYPES.map(
+            (type) =>
+              `<option value="${escapeHtml(type)}">${reportTypeLabel(type)}</option>`,
+          ).join("");
+          statusSelect.innerHTML = ["open", "in_review", "resolved"]
+            .map(
+              (status) =>
+                `<option value="${status}">${statusLabel(status)}</option>`,
+            )
+            .join("");
+        }
+
+        function openReportEdit(report) {
+          fillReportEditOptions();
+          editingReportId = report.id;
+          document.getElementById("editReportCategory").value =
+            report.category || "Other";
+          document.getElementById("editReportLocation").value =
+            report.location || "Main Atrium";
+          document.getElementById("editReportDescription").value =
+            report.description || "";
+          document.getElementById("editReportStatus").value =
+            report.status || "open";
+          document.getElementById("reportEditError").textContent = "";
+          const save = document.getElementById("saveReportEdit");
+          save.disabled = false;
+          save.textContent = tx("save");
+          const modal = document.getElementById("reportEditModal");
+          modal.classList.add("active");
+          modal.setAttribute("aria-hidden", "false");
+          document.getElementById("editReportCategory").focus();
+        }
+
+        function closeReportEdit() {
+          editingReportId = null;
+          const modal = document.getElementById("reportEditModal");
+          modal.classList.remove("active");
+          modal.setAttribute("aria-hidden", "true");
+        }
+
+        async function refreshApiReports() {
+          const [reports, mood] = await Promise.all([
+            api("/reports"),
+            api("/community-mood"),
+          ]);
+          renderApiReports(reports, mood);
         }
 
         function wireApiReports() {
@@ -4391,19 +4734,65 @@
           document
             .getElementById("rsFeed")
             .addEventListener("click", async (event) => {
+              const editButton = event.target.closest(".rs-edit[data-api-id]");
+              if (editButton) {
+                const report = apiReportCache.find(
+                  (item) => String(item.id) === editButton.dataset.apiId,
+                );
+                if (report) openReportEdit(report);
+                return;
+              }
               const deleteButton = event.target.closest(".rs-delete[data-api-id]");
               if (!deleteButton) return;
               try {
                 await api(`/reports/${deleteButton.dataset.apiId}`, {
                   method: "DELETE",
                 });
-                const [reports, mood] = await Promise.all([
-                  api("/reports"),
-                  api("/community-mood"),
-                ]);
-                renderApiReports(reports, mood);
+                await refreshApiReports();
               } catch (err) {
                 reportNote.textContent = tx("failApi");
+              }
+            });
+          document
+            .getElementById("cancelReportEdit")
+            .addEventListener("click", closeReportEdit);
+          document
+            .getElementById("reportEditModal")
+            .addEventListener("click", (event) => {
+              if (event.target.id === "reportEditModal") closeReportEdit();
+            });
+          document
+            .getElementById("reportEditForm")
+            .addEventListener("submit", async (event) => {
+              event.preventDefault();
+              if (!editingReportId) return;
+              const save = document.getElementById("saveReportEdit");
+              const error = document.getElementById("reportEditError");
+              save.disabled = true;
+              save.textContent = tx("saving");
+              error.textContent = "";
+              try {
+                await api(`/reports/${editingReportId}`, {
+                  method: "PATCH",
+                  body: JSON.stringify({
+                    category: document.getElementById("editReportCategory")
+                      .value,
+                    location: document
+                      .getElementById("editReportLocation")
+                      .value.trim(),
+                    description: document
+                      .getElementById("editReportDescription")
+                      .value.trim(),
+                    status: document.getElementById("editReportStatus").value,
+                  }),
+                });
+                await refreshApiReports();
+                closeReportEdit();
+              } catch (err) {
+                error.textContent = tx("updateFail");
+              } finally {
+                save.disabled = false;
+                save.textContent = tx("save");
               }
             });
           button.addEventListener("click", async () => {
@@ -4429,11 +4818,7 @@
                   author: "Dashboard visitor",
                 }),
               });
-              const [reports, mood] = await Promise.all([
-                api("/reports"),
-                api("/community-mood"),
-              ]);
-              renderApiReports(reports, mood);
+              await refreshApiReports();
               reportNote.textContent = tx("thanksApi");
             } catch (err) {
               reportNote.textContent = tx("failApi");
@@ -4449,18 +4834,21 @@
         async function loadFastApiData() {
           try {
             setApiStatus(tx("connecting"), true);
-            const [current, trend, summary, history, reports, mood] =
+            setHistoryState("loading");
+            const [current, trend, summary, sensorHistory, readings, reports, mood] =
               await Promise.all([
                 api("/current"),
                 api("/analytics/trend?hours=168"),
                 api("/analytics/summary"),
                 api("/history?limit=100"),
+                api("/readings?limit=200"),
                 api("/reports"),
                 api("/community-mood"),
-              ]);
-            renderLiveCurrent(current, history);
+            ]);
+            renderLiveCurrent(current, sensorHistory);
             renderLiveAnalytics(trend, summary);
-            renderLiveHistory(history);
+            setHistoryReadings(readings.map(normalizeApiReading));
+            historyHasLiveData = true;
             renderApiReports(reports, mood);
             wireApiReports();
             setApiStatus(tx("liveFastApi"), true);
@@ -4469,6 +4857,14 @@
               "AtriumIQ FastAPI unavailable; keeping embedded demo data.",
               err,
             );
+            if (historyHasLiveData) {
+              setHistoryState("ready");
+            } else {
+              setHistoryReadings(
+                demoHistoryReadings,
+                demoHistoryReadings.length ? "ready" : "error",
+              );
+            }
             setApiStatus(tx("demoOffline"), false);
           }
         }
