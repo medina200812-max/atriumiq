@@ -1,0 +1,4674 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AtriumIQ — Smart Comfort Analytics</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <style>
+      :root {
+        --navy: #001d39;
+        --navy-2: #0a4174;
+        --gold: #7bbde8;
+        --gold-soft: #bdd8e9;
+        --cyan: #6ea2b3;
+        --cyan-dim: #4e8ea2;
+        --white: #f8fbfe;
+        --glass: rgba(255, 255, 255, 0.06);
+        --glass-strong: rgba(255, 255, 255, 0.1);
+        --glass-border: rgba(255, 255, 255, 0.14);
+        --text-dim: rgba(248, 249, 251, 0.62);
+        --text-faint: rgba(248, 249, 251, 0.4);
+        --radius-lg: 22px;
+        --radius-md: 16px;
+        --radius-sm: 10px;
+        --font-display: "Poppins", sans-serif;
+        --font-body: "Poppins", sans-serif;
+        --font-data: "Poppins", sans-serif;
+      }
+      @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap");
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        background: var(--navy);
+        color: var(--white);
+        font-family: var(--font-body);
+        min-height: 100vh;
+        scroll-behavior: smooth;
+      }
+      body {
+        -webkit-font-smoothing: antialiased;
+        overflow-x: hidden;
+      }
+
+      /* ---------- Background ---------- */
+      .bg-fixed {
+        position: fixed;
+        inset: 0;
+        z-index: 0;
+        background:
+          radial-gradient(
+            circle at 12% 10%,
+            rgba(123, 189, 232, 0.22),
+            transparent 34%
+          ),
+          radial-gradient(
+            circle at 88% 2%,
+            rgba(78, 142, 162, 0.18),
+            transparent 32%
+          ),
+          linear-gradient(135deg, #001d39 0%, #0a4174 42%, #49769f 100%);
+      }
+      .bg-fixed::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          180deg,
+          rgba(0, 29, 57, 0.22),
+          rgba(0, 29, 57, 0.62)
+        );
+      }
+      .grain {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      .wrap {
+        position: relative;
+        z-index: 2;
+        max-width: 1360px;
+        margin: 0 auto;
+        padding: 24px 32px 80px;
+      }
+
+      /* ---------- Header ---------- */
+      header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 14px 22px;
+        border-radius: 18px;
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        backdrop-filter: blur(24px) saturate(140%);
+        -webkit-backdrop-filter: blur(24px) saturate(140%);
+        margin-bottom: 22px;
+      }
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+      }
+      .brand img {
+        height: 38px;
+        width: 126px;
+        object-fit: contain;
+        background: rgba(255, 255, 255, 0.08);
+        padding: 5px 9px;
+        border-radius: 10px;
+      }
+      .brand-text .name {
+        font-family: var(--font-display);
+        font-weight: 700;
+        font-size: 15px;
+        letter-spacing: 0.02em;
+        color: var(--white);
+      }
+      .brand-text .tag {
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.01em;
+        margin-top: 1px;
+      }
+
+      nav.tabs {
+        display: flex;
+        gap: 4px;
+        background: rgba(0, 0, 0, 0.18);
+        padding: 4px;
+        border-radius: 12px;
+        border: 1px solid var(--glass-border);
+      }
+      nav.tabs button {
+        border: none;
+        background: transparent;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-weight: 600;
+        font-size: 13px;
+        padding: 9px 18px;
+        border-radius: 9px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      nav.tabs button.active {
+        background: linear-gradient(
+          135deg,
+          var(--gold) 0%,
+          var(--gold-soft) 100%
+        );
+        color: var(--navy);
+      }
+      nav.tabs button:not(.active):hover {
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.06);
+      }
+
+      .status-pill {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        color: var(--text-dim);
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid var(--glass-border);
+        padding: 8px 14px;
+        border-radius: 999px;
+      }
+      .status-pill .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #5fe08a;
+        box-shadow: 0 0 8px #5fe08a;
+      }
+
+      /* ---------- Section labels ---------- */
+      .section-label {
+        font-family: var(--font-display);
+        font-weight: 600;
+        font-size: 12.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--gold-soft);
+        margin: 38px 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .section-label::after {
+        content: "";
+        flex: 1;
+        height: 1px;
+        background: linear-gradient(90deg, var(--glass-border), transparent);
+      }
+
+      /* ---------- Glass card base ---------- */
+      .card {
+        background: var(--glass);
+        border: 1px solid var(--glass-border);
+        border-radius: var(--radius-lg);
+        backdrop-filter: blur(20px) saturate(140%);
+        -webkit-backdrop-filter: blur(20px) saturate(140%);
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.06);
+        transition:
+          transform 0.25s ease,
+          box-shadow 0.25s ease,
+          border-color 0.25s ease;
+      }
+      .card:hover {
+        transform: translateY(-2px);
+        border-color: rgba(255, 255, 255, 0.22);
+        box-shadow:
+          0 16px 40px rgba(0, 0, 0, 0.34),
+          inset 0 1px 0 rgba(255, 255, 255, 0.08);
+      }
+
+      /* ---------- Hero ---------- */
+      .hero {
+        display: grid;
+        grid-template-columns: 1.15fr 1fr;
+        gap: 22px;
+        min-height: 280px;
+      }
+      .hero-main {
+        padding: 34px 38px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .hero-main::before {
+        content: "";
+        position: absolute;
+        top: -60px;
+        right: -60px;
+        width: 260px;
+        height: 260px;
+        background: radial-gradient(
+          circle,
+          rgba(123, 189, 232, 0.18),
+          transparent 70%
+        );
+        border-radius: 50%;
+      }
+      .hero-eyebrow {
+        font-size: 12px;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--cyan);
+        font-weight: 600;
+        margin-bottom: 14px;
+      }
+      .comfort-row {
+        display: flex;
+        align-items: flex-end;
+        gap: 20px;
+      }
+      .comfort-score {
+        font-family: var(--font-data);
+        font-size: 88px;
+        font-weight: 700;
+        line-height: 0.85;
+        letter-spacing: -0.02em;
+        background: linear-gradient(
+          135deg,
+          var(--white) 20%,
+          var(--gold-soft) 100%
+        );
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .comfort-unit {
+        font-size: 26px;
+        color: var(--text-dim);
+        font-weight: 500;
+        margin-bottom: 6px;
+      }
+      .comfort-status {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        margin-top: 16px;
+        padding: 8px 16px;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 600;
+        width: fit-content;
+      }
+      .comfort-desc {
+        margin-top: 16px;
+        font-size: 13.5px;
+        color: var(--text-dim);
+        max-width: 440px;
+        line-height: 1.55;
+      }
+      .hero-updated {
+        margin-top: 22px;
+        font-size: 11.5px;
+        color: var(--text-faint);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .hero-gauge {
+        padding: 30px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+      }
+      .gauge-wrap {
+        position: relative;
+        width: 180px;
+        height: 180px;
+      }
+      .gauge-wrap svg {
+        transform: rotate(-90deg);
+      }
+      .gauge-center {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      .gauge-center .num {
+        font-family: var(--font-data);
+        font-size: 34px;
+        font-weight: 700;
+        color: var(--white);
+      }
+      .gauge-center .lbl {
+        font-size: 10.5px;
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        margin-top: 2px;
+      }
+      .gauge-legend {
+        display: flex;
+        gap: 14px;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .gauge-legend span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .gauge-legend i {
+        width: 8px;
+        height: 8px;
+        border-radius: 2px;
+        display: inline-block;
+      }
+
+      /* ---------- Conditions grid ---------- */
+      .grid-5 {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 16px;
+      }
+      .cond-card {
+        padding: 20px 20px 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+      .cond-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+      .cond-icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        background: rgba(123, 189, 232, 0.1);
+        border: 1px solid rgba(123, 189, 232, 0.18);
+      }
+      .cond-icon.gold {
+        background: rgba(189, 216, 233, 0.14);
+        border-color: rgba(189, 216, 233, 0.24);
+      }
+      .cond-trend {
+        font-size: 10.5px;
+        font-weight: 600;
+        padding: 3px 7px;
+        border-radius: 6px;
+      }
+      .trend-up {
+        color: #ff9b7a;
+        background: rgba(255, 155, 122, 0.12);
+      }
+      .trend-down {
+        color: #7ee0a8;
+        background: rgba(126, 224, 168, 0.12);
+      }
+      .trend-flat {
+        color: var(--cyan);
+        background: rgba(123, 189, 232, 0.1);
+      }
+      .cond-value {
+        font-family: var(--font-data);
+        font-size: 28px;
+        font-weight: 700;
+        color: var(--white);
+        letter-spacing: -0.01em;
+      }
+      .cond-value small {
+        font-size: 14px;
+        font-weight: 500;
+        color: var(--text-dim);
+      }
+      .cond-label {
+        font-size: 12px;
+        color: var(--text-dim);
+        font-weight: 500;
+      }
+
+      /* ---------- Analytics grid ---------- */
+      .grid-6 {
+        display: grid;
+        grid-template-columns: repeat(6, 1fr);
+        gap: 16px;
+      }
+      .an-card {
+        padding: 18px;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .an-icon {
+        font-size: 15px;
+        opacity: 0.85;
+      }
+      .an-value {
+        font-family: var(--font-data);
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--gold-soft);
+      }
+      .an-label {
+        font-size: 11px;
+        color: var(--text-dim);
+        line-height: 1.3;
+      }
+
+      /* ---------- Charts ---------- */
+      .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+      .chart-card {
+        padding: 22px 24px;
+      }
+      .chart-head {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 16px;
+      }
+      .chart-title {
+        font-family: var(--font-display);
+        font-size: 14.5px;
+        font-weight: 600;
+        color: var(--white);
+      }
+      .chart-sub {
+        font-size: 11px;
+        color: var(--text-faint);
+        margin-top: 2px;
+      }
+      .chart-legend {
+        display: flex;
+        gap: 12px;
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .chart-legend span {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .chart-legend i {
+        width: 9px;
+        height: 9px;
+        border-radius: 3px;
+      }
+      .chart-box {
+        height: 210px;
+        position: relative;
+      }
+
+      /* ---------- Signature experience ---------- */
+      .theme-toggle {
+        border: 1px solid var(--glass-border);
+        background: rgba(0, 0, 0, 0.2);
+        color: var(--white);
+        font-family: var(--font-body);
+        font-size: 12px;
+        font-weight: 700;
+        padding: 8px 12px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .theme-toggle:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+      .language-switch {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 4px;
+        border-radius: 999px;
+        background: rgba(0, 0, 0, 0.18);
+        border: 1px solid var(--glass-border);
+      }
+      .lang-btn {
+        border: 0;
+        background: transparent;
+        color: var(--text-dim);
+        font-family: var(--font-body);
+        font-size: 11px;
+        font-weight: 800;
+        padding: 6px 8px;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .lang-btn:hover {
+        color: var(--white);
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .lang-btn.active {
+        background: linear-gradient(135deg, var(--gold), var(--gold-soft));
+        color: var(--navy);
+      }
+      .decision-card {
+        padding: 26px 30px;
+        margin-bottom: 18px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 18px;
+        align-items: center;
+        overflow: hidden;
+        position: relative;
+      }
+      .decision-card::before {
+        content: "";
+        position: absolute;
+        inset: -45% -20%;
+        opacity: 0.36;
+        background: linear-gradient(
+          120deg,
+          var(--mood-a, #7ee0a8),
+          transparent 42%,
+          var(--mood-b, #7bbde8)
+        );
+        animation: moodShift 9s ease-in-out infinite alternate;
+      }
+      .decision-card > * {
+        position: relative;
+        z-index: 1;
+      }
+      .decision-kicker {
+        font-size: 11px;
+        color: var(--text-dim);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        font-weight: 800;
+      }
+      .decision-main {
+        font-family: var(--font-display);
+        font-size: 30px;
+        line-height: 1.1;
+        font-weight: 800;
+        margin-top: 7px;
+      }
+      .decision-reason {
+        color: var(--text-dim);
+        font-size: 13px;
+        line-height: 1.5;
+        margin-top: 8px;
+        max-width: 700px;
+      }
+      .decision-pill {
+        min-width: 176px;
+        text-align: center;
+        padding: 13px 16px;
+        border-radius: 999px;
+        font-weight: 800;
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        color: var(--white);
+      }
+      .signature-grid {
+        display: grid;
+        grid-template-columns: 1.15fr 0.85fr;
+        gap: 18px;
+      }
+      .mood-map {
+        padding: 26px;
+        overflow: hidden;
+        position: relative;
+        min-height: 360px;
+      }
+      .mood-map::before {
+        content: "";
+        position: absolute;
+        inset: -35%;
+        opacity: 0.32;
+        background: conic-gradient(
+          from 140deg,
+          var(--mood-a, #7ee0a8),
+          var(--mood-b, #7bbde8),
+          rgba(255, 255, 255, 0.08),
+          var(--mood-a, #7ee0a8)
+        );
+        animation: spinGlow 18s linear infinite;
+      }
+      .mood-map::after {
+        content: "";
+        position: absolute;
+        inset: 1px;
+        border-radius: var(--radius-lg);
+        background: linear-gradient(
+          180deg,
+          rgba(15, 23, 42, 0.56),
+          rgba(15, 23, 42, 0.88)
+        );
+      }
+      .mood-map > * {
+        position: relative;
+        z-index: 1;
+      }
+      .mood-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 16px;
+        align-items: flex-start;
+      }
+      .mood-title {
+        font-family: var(--font-display);
+        font-size: 15px;
+        font-weight: 800;
+      }
+      .mood-sub {
+        font-size: 11.5px;
+        color: var(--text-faint);
+        margin-top: 4px;
+      }
+      .mood-orb {
+        width: 178px;
+        height: 178px;
+        margin: 28px auto 20px;
+        border-radius: 50%;
+        background:
+          radial-gradient(
+            circle at 35% 28%,
+            rgba(255, 255, 255, 0.7),
+            transparent 18%
+          ),
+          radial-gradient(
+            circle,
+            var(--mood-a, #7ee0a8),
+            var(--mood-b, #7bbde8)
+          );
+        box-shadow:
+          0 0 46px var(--mood-glow, rgba(126, 224, 168, 0.35)),
+          inset 0 0 42px rgba(255, 255, 255, 0.12);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        animation: pulseMood 3.8s ease-in-out infinite;
+      }
+      .mood-orb .score {
+        font-family: var(--font-data);
+        font-size: 46px;
+        font-weight: 800;
+      }
+      .mood-orb .label {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.72);
+        letter-spacing: 0.09em;
+        text-transform: uppercase;
+      }
+      .mood-name {
+        font-family: var(--font-display);
+        font-size: 28px;
+        font-weight: 800;
+        text-align: center;
+      }
+      .mood-copy {
+        text-align: center;
+        color: var(--text-dim);
+        font-size: 13px;
+        line-height: 1.5;
+        max-width: 520px;
+        margin: 10px auto 18px;
+      }
+      .mood-scale {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 8px;
+      }
+      .mood-scale-item {
+        padding: 10px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.18);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        font-size: 11px;
+        color: var(--text-dim);
+      }
+      .mood-scale-item.active {
+        color: var(--white);
+        border-color: var(--mood-a, #7ee0a8);
+        box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+      .assistant-card {
+        padding: 24px 24px 18px;
+      }
+      .insight-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        margin-top: 14px;
+      }
+      .insight-item {
+        padding: 13px 14px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        color: var(--text-dim);
+        font-size: 13px;
+        line-height: 1.4;
+      }
+      .insight-item strong {
+        color: var(--white);
+      }
+      .best-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+      }
+      .best-card {
+        padding: 18px;
+        min-height: 132px;
+      }
+      .best-label {
+        font-size: 11px;
+        color: var(--text-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 800;
+      }
+      .best-time {
+        font-family: var(--font-data);
+        font-size: 23px;
+        color: var(--gold-soft);
+        font-weight: 800;
+        margin: 10px 0 8px;
+      }
+      .best-reason {
+        font-size: 12px;
+        color: var(--text-dim);
+        line-height: 1.42;
+      }
+      .explain-grid {
+        display: grid;
+        grid-template-columns: 0.8fr 1.2fr;
+        gap: 18px;
+      }
+      .score-breakdown {
+        padding: 24px;
+      }
+      .score-total {
+        font-family: var(--font-data);
+        font-size: 48px;
+        color: var(--white);
+        font-weight: 800;
+        margin: 8px 0 16px;
+      }
+      .impact-list {
+        display: flex;
+        flex-direction: column;
+        gap: 13px;
+      }
+      .impact-row {
+        display: grid;
+        grid-template-columns: 118px 1fr 44px;
+        gap: 12px;
+        align-items: center;
+        font-size: 12.5px;
+        color: var(--text-dim);
+      }
+      .impact-track {
+        height: 9px;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        overflow: hidden;
+      }
+      .impact-fill {
+        height: 100%;
+        border-radius: 999px;
+        background: linear-gradient(
+          90deg,
+          var(--mood-a, #7ee0a8),
+          var(--mood-b, #7bbde8)
+        );
+      }
+      .timeline-card {
+        padding: 24px;
+        overflow: hidden;
+      }
+      .timeline-scroll {
+        display: grid;
+        grid-template-columns: repeat(24, minmax(84px, 1fr));
+        gap: 8px;
+        overflow-x: auto;
+        padding-bottom: 6px;
+      }
+      .hour-tile {
+        min-height: 142px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.16);
+        border: 1px solid rgba(255, 255, 255, 0.07);
+        padding: 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 7px;
+      }
+      .hour-tile.best {
+        border-color: var(--mood-a, #7ee0a8);
+        background: rgba(255, 255, 255, 0.07);
+      }
+      .hour-time {
+        font-family: var(--font-data);
+        font-size: 13px;
+        color: var(--white);
+        font-weight: 800;
+      }
+      .hour-grade {
+        font-size: 11px;
+        font-weight: 800;
+        width: max-content;
+        padding: 3px 7px;
+        border-radius: 999px;
+      }
+      .hour-score {
+        font-family: var(--font-data);
+        font-size: 20px;
+        font-weight: 800;
+        color: var(--gold-soft);
+      }
+      .hour-metrics {
+        font-size: 10.5px;
+        color: var(--text-dim);
+        line-height: 1.45;
+        margin-top: auto;
+      }
+      .advanced-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 14px;
+      }
+      .advanced-card {
+        padding: 17px;
+        min-height: 126px;
+      }
+      .advanced-card .metric {
+        font-family: var(--font-data);
+        color: var(--gold-soft);
+        font-size: 24px;
+        font-weight: 800;
+        margin-bottom: 8px;
+      }
+      .advanced-card .copy {
+        font-size: 12px;
+        color: var(--text-dim);
+        line-height: 1.45;
+      }
+      @keyframes spinGlow {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes pulseMood {
+        50% {
+          transform: scale(1.035);
+          box-shadow:
+            0 0 70px var(--mood-glow, rgba(126, 224, 168, 0.45)),
+            inset 0 0 46px rgba(255, 255, 255, 0.16);
+        }
+      }
+      @keyframes moodShift {
+        to {
+          transform: translateX(6%) rotate(4deg);
+        }
+      }
+
+      body.light {
+        --navy: #bdd8e9;
+        --navy-2: #f7fbfe;
+        --gold: #0a4174;
+        --gold-soft: #49769f;
+        --cyan: #4e8ea2;
+        --cyan-dim: #6ea2b3;
+        --white: #001d39;
+        --glass: rgba(255, 255, 255, 0.7);
+        --glass-strong: rgba(255, 255, 255, 0.88);
+        --glass-border: rgba(0, 29, 57, 0.12);
+        --text-dim: rgba(0, 29, 57, 0.66);
+        --text-faint: rgba(0, 29, 57, 0.46);
+      }
+      body.light .bg-fixed {
+        filter: none;
+        background:
+          radial-gradient(
+            circle at 12% 10%,
+            rgba(123, 189, 232, 0.32),
+            transparent 34%
+          ),
+          radial-gradient(
+            circle at 88% 2%,
+            rgba(78, 142, 162, 0.2),
+            transparent 32%
+          ),
+          linear-gradient(135deg, #bdd8e9 0%, #7bbde8 46%, #6ea2b3 100%);
+      }
+      body.light .bg-fixed::after {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.68),
+          rgba(189, 216, 233, 0.44)
+        );
+      }
+      body.light .card {
+        box-shadow:
+          0 12px 34px rgba(15, 23, 42, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.75);
+      }
+      body.light .mood-map::after {
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.62),
+          rgba(255, 255, 255, 0.86)
+        );
+      }
+      body.light .language-switch {
+        background: rgba(255, 255, 255, 0.5);
+      }
+
+      /* ---------- History ---------- */
+      .history-card {
+        padding: 24px 26px;
+      }
+      .filters {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 18px;
+      }
+      .filters select,
+      .filters input {
+        background: rgba(0, 0, 0, 0.22);
+        border: 1px solid var(--glass-border);
+        color: var(--white);
+        font-family: var(--font-body);
+        font-size: 12.5px;
+        padding: 9px 12px;
+        border-radius: 9px;
+        outline: none;
+      }
+      .filters select:focus,
+      .filters input:focus {
+        border-color: var(--gold);
+      }
+      .filters label {
+        font-size: 10.5px;
+        color: var(--text-faint);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        display: block;
+        margin-bottom: 5px;
+      }
+      .filter-group {
+        display: flex;
+        flex-direction: column;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12.5px;
+      }
+      thead th {
+        text-align: left;
+        padding: 10px 12px;
+        color: var(--cyan);
+        font-weight: 600;
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        cursor: pointer;
+        user-select: none;
+        border-bottom: 1px solid var(--glass-border);
+        white-space: nowrap;
+      }
+      thead th:hover {
+        color: var(--gold-soft);
+      }
+      thead th .arrow {
+        opacity: 0.5;
+        font-size: 9px;
+        margin-left: 3px;
+      }
+      tbody td {
+        padding: 11px 12px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: var(--text-dim);
+      }
+      tbody tr:hover td {
+        background: rgba(255, 255, 255, 0.03);
+        color: var(--white);
+      }
+      .badge {
+        padding: 3px 9px;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        display: inline-block;
+      }
+      .table-scroll {
+        max-height: 360px;
+        overflow-y: auto;
+        border-radius: 12px;
+      }
+      .table-scroll::-webkit-scrollbar {
+        width: 6px;
+      }
+      .table-scroll::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.15);
+        border-radius: 6px;
+      }
+      .table-empty {
+        padding: 30px;
+        text-align: center;
+        color: var(--text-faint);
+        font-size: 12.5px;
+      }
+
+      /* ---------- Reports ---------- */
+      .grid-reports {
+        display: grid;
+        grid-template-columns: 1fr 1.3fr;
+        gap: 18px;
+      }
+      .report-form {
+        padding: 24px 26px;
+      }
+      .report-options {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+        margin: 16px 0 18px;
+      }
+      .report-opt {
+        border: 1px solid var(--glass-border);
+        background: rgba(0, 0, 0, 0.18);
+        border-radius: 12px;
+        padding: 14px 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: var(--text-dim);
+        font-size: 11.5px;
+        font-weight: 600;
+      }
+      .report-opt .ic {
+        font-size: 19px;
+      }
+      .report-opt:hover {
+        border-color: rgba(255, 255, 255, 0.25);
+        background: rgba(255, 255, 255, 0.04);
+      }
+      .report-opt.selected {
+        border-color: var(--gold);
+        background: rgba(123, 189, 232, 0.14);
+        color: var(--white);
+      }
+      .report-submit {
+        width: 100%;
+        padding: 13px;
+        border: none;
+        border-radius: 10px;
+        font-family: var(--font-body);
+        font-weight: 700;
+        font-size: 13px;
+        cursor: pointer;
+        letter-spacing: 0.02em;
+        background: linear-gradient(
+          135deg,
+          var(--gold) 0%,
+          var(--gold-soft) 100%
+        );
+        color: var(--navy);
+        transition: opacity 0.2s ease;
+      }
+      .report-submit:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+      }
+      .report-submit:not(:disabled):hover {
+        opacity: 0.9;
+      }
+      .report-details {
+        width: 100%;
+        min-height: 86px;
+        resize: vertical;
+        display: none;
+        margin: -4px 0 14px;
+        padding: 11px 12px;
+        border-radius: 10px;
+        border: 1px solid var(--glass-border);
+        background: rgba(0, 0, 0, 0.18);
+        color: var(--white);
+        font-family: var(--font-body);
+        font-size: 12.5px;
+        outline: none;
+      }
+      .report-details.active {
+        display: block;
+      }
+      .report-details:focus {
+        border-color: var(--gold);
+      }
+      .report-note {
+        font-size: 11px;
+        color: var(--text-faint);
+        margin-top: 10px;
+        text-align: center;
+      }
+
+      .report-stats {
+        padding: 24px 26px;
+      }
+      .rs-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        margin-top: 6px;
+      }
+      .rs-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 12px;
+      }
+      .rs-row .rs-label {
+        width: 110px;
+        color: var(--text-dim);
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        flex-shrink: 0;
+      }
+      .rs-track {
+        flex: 1;
+        height: 7px;
+        background: rgba(255, 255, 255, 0.06);
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .rs-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 0.5s ease;
+      }
+      .rs-count {
+        width: 26px;
+        text-align: right;
+        color: var(--text-faint);
+        font-family: var(--font-data);
+        font-size: 11.5px;
+      }
+      .rs-feed {
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--glass-border);
+      }
+      .rs-feed-title {
+        font-size: 11px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-faint);
+        margin-bottom: 10px;
+      }
+      .rs-feed-list {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        max-height: 170px;
+        overflow-y: auto;
+      }
+      .rs-feed-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        color: var(--text-dim);
+        padding: 8px 10px;
+        background: rgba(0, 0, 0, 0.14);
+        border-radius: 8px;
+      }
+      .rs-feed-item .badge {
+        flex-shrink: 0;
+      }
+      .rs-feed-item .txt {
+        flex: 1;
+        color: var(--text-dim);
+      }
+      .rs-feed-item .time {
+        font-size: 10.5px;
+        color: var(--text-faint);
+        flex-shrink: 0;
+      }
+      .rs-delete {
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.06);
+        color: var(--text-dim);
+        border-radius: 7px;
+        width: 25px;
+        height: 25px;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+      .rs-delete:hover {
+        color: #ff9b7a;
+        border-color: rgba(255, 155, 122, 0.35);
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 50px;
+        font-size: 11px;
+        color: var(--text-faint);
+        letter-spacing: 0.02em;
+      }
+      footer b {
+        color: var(--gold-soft);
+      }
+
+      .view {
+        display: none;
+      }
+      .view.active {
+        display: block;
+        animation: fadein 0.35s ease;
+      }
+      @keyframes fadein {
+        from {
+          opacity: 0;
+          transform: translateY(6px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @media (max-width: 1100px) {
+        .grid-5 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .grid-6 {
+          grid-template-columns: repeat(3, 1fr);
+        }
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+        .signature-grid,
+        .explain-grid {
+          grid-template-columns: 1fr;
+        }
+        .best-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .advanced-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .hero {
+          grid-template-columns: 1fr;
+        }
+        .grid-reports {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 640px) {
+        .wrap {
+          padding: 16px 14px 60px;
+        }
+        header {
+          flex-wrap: wrap;
+          gap: 12px;
+        }
+        .header-actions {
+          width: 100%;
+          justify-content: space-between;
+        }
+        nav.tabs {
+          order: 3;
+          width: 100%;
+          overflow-x: auto;
+        }
+        .grid-5 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .grid-6 {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .decision-card {
+          grid-template-columns: 1fr;
+          padding: 22px;
+        }
+        .decision-main {
+          font-size: 24px;
+        }
+        .best-grid,
+        .advanced-grid {
+          grid-template-columns: 1fr;
+        }
+        .mood-scale {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .impact-row {
+          grid-template-columns: 96px 1fr 40px;
+        }
+        .comfort-score {
+          font-size: 60px;
+        }
+        .report-options {
+          grid-template-columns: repeat(2, 1fr);
+        }
+      }
+
+      /* ---------- Barsik mascot ---------- */
+      .barsik-assistant {
+        position: fixed !important;
+        right: max(18px, env(safe-area-inset-right));
+        bottom: max(16px, env(safe-area-inset-bottom));
+        left: auto;
+        top: auto;
+        z-index: 60;
+        display: flex;
+        align-items: flex-end;
+        gap: 10px;
+        max-width: calc(100vw - 24px);
+        pointer-events: none;
+        transform: translateZ(0);
+        will-change: transform;
+      }
+      .barsik-assistant.intro {
+        animation: barsikWalkIn 1.65s cubic-bezier(0.2, 0.85, 0.22, 1) both;
+      }
+      .barsik-bubble {
+        width: min(270px, calc(100vw - 150px));
+        background: rgba(0, 29, 57, 0.92);
+        border: 1px solid rgba(189, 216, 233, 0.22);
+        color: #f8fbfe;
+        border-radius: 18px;
+        padding: 13px 14px;
+        box-shadow: 0 18px 46px rgba(0, 0, 0, 0.32);
+        backdrop-filter: blur(18px);
+        -webkit-backdrop-filter: blur(18px);
+        pointer-events: auto;
+        transform-origin: 100% 100%;
+      }
+      .barsik-kicker {
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: rgba(248, 251, 254, 0.55);
+        margin-bottom: 5px;
+      }
+      .barsik-message {
+        font-size: 14px;
+        font-weight: 800;
+        line-height: 1.25;
+      }
+      .barsik-insight {
+        display: flex;
+        gap: 7px;
+        margin-top: 8px;
+        font-size: 11.5px;
+        line-height: 1.35;
+        color: rgba(248, 251, 254, 0.66);
+      }
+      .barsik-mascot {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        pointer-events: auto;
+      }
+      .barsik-mascot img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        display: block;
+        filter: drop-shadow(0 18px 28px rgba(0, 0, 0, 0.45));
+        user-select: none;
+      }
+      .barsik-mascot.veryHappy {
+        animation: barsikBounce 1.35s ease-in-out infinite;
+      }
+      .barsik-mascot.happy {
+        animation: barsikFloat 2.4s ease-in-out infinite;
+      }
+      .barsik-mascot.neutral {
+        animation: barsikIdle 3.2s ease-in-out infinite;
+      }
+      .barsik-mascot.hot {
+        animation: barsikBreath 1.45s ease-in-out infinite;
+      }
+      .barsik-mascot.concerned {
+        animation: barsikSlow 3.6s ease-in-out infinite;
+      }
+      .barsik-mascot.worried {
+        animation: barsikShake 0.62s ease-in-out infinite;
+      }
+      .barsik-sparkle,
+      .barsik-sweat,
+      .barsik-warning {
+        position: absolute;
+        pointer-events: none;
+      }
+      .barsik-sparkle {
+        font-size: 17px;
+        animation: barsikSparkle 1.6s ease-in-out infinite;
+      }
+      .barsik-sparkle.s1 {
+        left: 10px;
+        top: 16px;
+      }
+      .barsik-sparkle.s2 {
+        right: 20px;
+        top: 6px;
+        animation-delay: 0.28s;
+      }
+      .barsik-sweat {
+        left: 16px;
+        top: 22px;
+        font-size: 17px;
+        animation: barsikSweat 1.2s ease-in-out infinite;
+      }
+      .barsik-warning {
+        right: 4px;
+        top: 18px;
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        background: #f87171;
+        box-shadow: 0 0 18px rgba(248, 113, 113, 0.9);
+        animation: barsikBlink 0.75s ease-in-out infinite;
+      }
+      body.light .barsik-bubble {
+        background: rgba(255, 255, 255, 0.92);
+        color: #001d39;
+        border-color: rgba(0, 29, 57, 0.14);
+      }
+      body.light .barsik-kicker {
+        color: rgba(0, 29, 57, 0.48);
+      }
+      body.light .barsik-insight {
+        color: rgba(0, 29, 57, 0.64);
+      }
+      @keyframes barsikWalkIn {
+        0% {
+          transform: translateX(-120vw);
+          opacity: 0;
+        }
+        62% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateX(0);
+          opacity: 1;
+        }
+      }
+      @keyframes barsikBounce {
+        50% {
+          transform: translateY(-12px) rotate(-2deg);
+        }
+      }
+      @keyframes barsikFloat {
+        50% {
+          transform: translateY(-7px);
+        }
+      }
+      @keyframes barsikIdle {
+        50% {
+          transform: translateY(-3px);
+        }
+      }
+      @keyframes barsikBreath {
+        50% {
+          transform: translateY(3px) scale(1.025);
+        }
+      }
+      @keyframes barsikSlow {
+        50% {
+          transform: translateY(2px);
+        }
+      }
+      @keyframes barsikShake {
+        20% {
+          transform: translateX(-2px);
+        }
+        40% {
+          transform: translateX(2px);
+        }
+        60% {
+          transform: translateX(-2px);
+        }
+        80% {
+          transform: translateX(2px);
+        }
+      }
+      @keyframes barsikSparkle {
+        0%,
+        100% {
+          opacity: 0.2;
+          transform: scale(0.55) rotate(0deg);
+        }
+        50% {
+          opacity: 1;
+          transform: scale(1.15) rotate(18deg);
+        }
+      }
+      @keyframes barsikSweat {
+        0%,
+        100% {
+          opacity: 0.25;
+          transform: translateY(0);
+        }
+        50% {
+          opacity: 1;
+          transform: translateY(9px);
+        }
+      }
+      @keyframes barsikBlink {
+        50% {
+          opacity: 0.35;
+        }
+      }
+      @media (max-width: 760px) {
+        .barsik-assistant {
+          position: fixed !important;
+          right: max(8px, env(safe-area-inset-right));
+          bottom: max(8px, env(safe-area-inset-bottom));
+          left: auto;
+          top: auto;
+          gap: 6px;
+        }
+        .barsik-mascot {
+          width: 104px;
+          height: 104px;
+        }
+        .barsik-bubble {
+          width: min(218px, calc(100vw - 118px));
+          padding: 10px 11px;
+          border-radius: 14px;
+        }
+        .barsik-message {
+          font-size: 12.5px;
+        }
+        .barsik-insight {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="bg-fixed"></div>
+    <div class="grain"></div>
+
+    <div class="wrap">
+      <header>
+        <div class="brand">
+          <img src="logo-atriumiq.png" alt="AtriumIQ logo" />
+          <div class="brand-text">
+            <div class="name">AtriumIQ</div>
+            <div class="tag">
+              Smart Comfort Analytics · Nazarbayev University
+            </div>
+          </div>
+        </div>
+        <nav class="tabs">
+          <button class="active" data-view="overview">Overview</button>
+          <button data-view="history">History</button>
+          <button data-view="reports">Reports</button>
+        </nav>
+        <div class="header-actions">
+          <div class="language-switch" aria-label="Language">
+            <button class="lang-btn active" type="button" data-lang="en">
+              EN
+            </button>
+            <button class="lang-btn" type="button" data-lang="kk">KK</button>
+            <button class="lang-btn" type="button" data-lang="ru">RU</button>
+          </div>
+          <button class="theme-toggle" id="themeToggle" type="button">
+            Light mode
+          </button>
+          <div class="status-pill">
+            <span class="dot"></span> Live feed connected
+          </div>
+        </div>
+      </header>
+
+      <!-- ================= OVERVIEW ================= -->
+      <div class="view active" id="view-overview">
+        <div class="decision-card card" id="decisionCard">
+          <div>
+            <div class="decision-kicker">
+              Should I go to the atrium right now?
+            </div>
+            <div class="decision-main" id="decisionMain">
+              Checking current conditions…
+            </div>
+            <div class="decision-reason" id="decisionReason">
+              AtriumIQ is combining temperature, noise, brightness, and outside
+              comparison into one student-friendly answer.
+            </div>
+          </div>
+          <div class="decision-pill" id="decisionPill">Live decision</div>
+        </div>
+
+        <div class="hero">
+          <div class="hero-main card">
+            <div class="hero-eyebrow">Current Atrium Status · Right Now</div>
+            <div class="comfort-row">
+              <div class="comfort-score" id="comfortScore">--</div>
+              <div class="comfort-unit">/ 100</div>
+            </div>
+            <div class="comfort-status" id="comfortStatus">Calculating…</div>
+            <div class="comfort-desc" id="comfortDesc">
+              Reading the latest sensor sweep from the atrium network to judge
+              whether now is a good time to study, meet, or unwind.
+            </div>
+            <div class="hero-updated" id="lastUpdated">Last updated —</div>
+          </div>
+          <div class="hero-gauge card">
+            <div class="gauge-wrap">
+              <svg width="180" height="180" viewBox="0 0 180 180">
+                <circle
+                  cx="90"
+                  cy="90"
+                  r="78"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.08)"
+                  stroke-width="14"
+                />
+                <circle
+                  id="gaugeArc"
+                  cx="90"
+                  cy="90"
+                  r="78"
+                  fill="none"
+                  stroke="url(#gaugeGrad)"
+                  stroke-width="14"
+                  stroke-linecap="round"
+                  stroke-dasharray="490"
+                  stroke-dashoffset="490"
+                />
+                <defs>
+                  <linearGradient
+                    id="gaugeGrad"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
+                    <stop offset="0%" stop-color="#7BBDE8" />
+                    <stop offset="100%" stop-color="#BDD8E9" />
+                  </linearGradient>
+                </defs>
+              </svg>
+              <div class="gauge-center">
+                <div class="num" id="gaugeNum">--</div>
+                <div class="lbl">Comfort</div>
+              </div>
+            </div>
+            <div class="gauge-legend">
+              <span><i style="background: #7ee0a8"></i>Great 70+</span>
+              <span><i style="background: #bdd8e9"></i>Fair 40-69</span>
+              <span><i style="background: #ff9b7a"></i>Poor &lt;40</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-label">Atrium Mood Map · Signature Feature</div>
+        <div class="signature-grid">
+          <div class="mood-map card" id="moodMap">
+            <div class="mood-head">
+              <div>
+                <div class="mood-title">Interactive Atrium Mood Map</div>
+                <div class="mood-sub">
+                  A visual read of how comfortable the atrium feels right now.
+                </div>
+              </div>
+              <div class="decision-pill" id="moodRange">--</div>
+            </div>
+            <div class="mood-orb">
+              <div class="score" id="moodScore">--</div>
+              <div class="label">Mood score</div>
+            </div>
+            <div class="mood-name" id="moodName">Calculating…</div>
+            <div class="mood-copy" id="moodCopy">
+              Comfort state will appear once the latest reading is analyzed.
+            </div>
+            <div class="mood-scale" id="moodScale"></div>
+          </div>
+          <div class="assistant-card card">
+            <div class="chart-title">Smart Student Assistant</div>
+            <div class="chart-sub" style="margin-top: 4px">
+              Personalized recommendations generated from the latest
+              measurements and daily patterns.
+            </div>
+            <div class="insight-list" id="assistantInsights"></div>
+          </div>
+        </div>
+
+        <div class="section-label">Current Conditions</div>
+        <div class="grid-5">
+          <div class="cond-card card">
+            <div class="cond-top">
+              <div class="cond-icon gold">🌡</div>
+              <div class="cond-trend" id="trendAtrium">—</div>
+            </div>
+            <div class="cond-value" id="valAtriumTemp">--<small>°C</small></div>
+            <div class="cond-label">Atrium Temperature</div>
+          </div>
+          <div class="cond-card card">
+            <div class="cond-top">
+              <div class="cond-icon">🌆</div>
+              <div class="cond-trend" id="trendOutside">—</div>
+            </div>
+            <div class="cond-value" id="valOutsideTemp">
+              --<small>°C</small>
+            </div>
+            <div class="cond-label">Outdoor Temperature</div>
+          </div>
+          <div class="cond-card card">
+            <div class="cond-top">
+              <div class="cond-icon">🔉</div>
+              <div class="cond-trend trend-flat" id="valNoiseTag">—</div>
+            </div>
+            <div class="cond-value" id="valNoise">--</div>
+            <div class="cond-label">Noise Level</div>
+          </div>
+          <div class="cond-card card">
+            <div class="cond-top">
+              <div class="cond-icon">💡</div>
+              <div class="cond-trend trend-flat" id="valBrightTag">—</div>
+            </div>
+            <div class="cond-value" id="valBright">--</div>
+            <div class="cond-label">Brightness Level</div>
+          </div>
+          <div class="cond-card card">
+            <div class="cond-top">
+              <div class="cond-icon gold">Δ</div>
+              <div class="cond-trend" id="trendDiff">—</div>
+            </div>
+            <div class="cond-value" id="valDiff">--<small>°C</small></div>
+            <div class="cond-label">Temp. Difference (In − Out)</div>
+          </div>
+        </div>
+
+        <div class="section-label">Best Time Finder</div>
+        <div class="best-grid" id="bestFinder"></div>
+
+        <div class="section-label">Comfort Score Explanation</div>
+        <div class="explain-grid">
+          <div class="score-breakdown card">
+            <div class="chart-title">Why this score?</div>
+            <div class="score-total" id="scoreTotal">--/100</div>
+            <div class="impact-list">
+              <div class="impact-row">
+                <span>Temperature</span>
+                <div class="impact-track">
+                  <div class="impact-fill" id="tempImpactBar"></div>
+                </div>
+                <strong id="tempImpact">--</strong>
+              </div>
+              <div class="impact-row">
+                <span>Noise</span>
+                <div class="impact-track">
+                  <div class="impact-fill" id="noiseImpactBar"></div>
+                </div>
+                <strong id="noiseImpact">--</strong>
+              </div>
+              <div class="impact-row">
+                <span>Brightness</span>
+                <div class="impact-track">
+                  <div class="impact-fill" id="brightImpactBar"></div>
+                </div>
+                <strong id="brightImpact">--</strong>
+              </div>
+            </div>
+          </div>
+          <div class="timeline-card card">
+            <div class="chart-head">
+              <div>
+                <div class="chart-title">Comfort Timeline</div>
+                <div class="chart-sub">
+                  Hourly comfort, temperature, noise, and brightness for the
+                  latest day
+                </div>
+              </div>
+            </div>
+            <div class="timeline-scroll" id="comfortTimeline"></div>
+          </div>
+        </div>
+
+        <div class="section-label">Analytics · Last 3 Days</div>
+        <div class="grid-6">
+          <div class="an-card card">
+            <div class="an-icon">🔽</div>
+            <div class="an-value" id="anMin">--°C</div>
+            <div class="an-label">Min atrium temperature</div>
+          </div>
+          <div class="an-card card">
+            <div class="an-icon">🔼</div>
+            <div class="an-value" id="anMax">--°C</div>
+            <div class="an-label">Max atrium temperature</div>
+          </div>
+          <div class="an-card card">
+            <div class="an-icon">⟷</div>
+            <div class="an-value" id="anAvg">--°C</div>
+            <div class="an-label">Average temperature</div>
+          </div>
+          <div class="an-card card">
+            <div class="an-icon">📖</div>
+            <div class="an-value" id="anStudy">--</div>
+            <div class="an-label">Best time to study</div>
+          </div>
+          <div class="an-card card">
+            <div class="an-icon">🤝</div>
+            <div class="an-value" id="anMeeting">--</div>
+            <div class="an-label">Best time for meetings</div>
+          </div>
+          <div class="an-card card">
+            <div class="an-icon">❄️</div>
+            <div class="an-value" id="anCoolest">--</div>
+            <div class="an-label">Coolest period of day</div>
+          </div>
+        </div>
+
+        <div class="section-label">Advanced Analytics</div>
+        <div class="advanced-grid" id="advancedInsights"></div>
+
+        <div class="section-label">Trends</div>
+        <div class="grid-2">
+          <div class="chart-card card">
+            <div class="chart-head">
+              <div>
+                <div class="chart-title">Temperature Trend</div>
+                <div class="chart-sub">
+                  Atrium vs. outdoor, last 40 readings
+                </div>
+              </div>
+              <div class="chart-legend">
+                <span><i style="background: #7bbde8"></i>Atrium</span
+                ><span><i style="background: #6ea2b3"></i>Outside</span>
+              </div>
+            </div>
+            <div class="chart-box"><canvas id="chartTemp"></canvas></div>
+          </div>
+          <div class="chart-card card">
+            <div class="chart-head">
+              <div>
+                <div class="chart-title">Atrium vs Outside Comparison</div>
+                <div class="chart-sub">Insulation gap over time (°C)</div>
+              </div>
+              <div class="chart-legend">
+                <span><i style="background: #bdd8e9"></i>Δ Gap</span>
+              </div>
+            </div>
+            <div class="chart-box"><canvas id="chartDiff"></canvas></div>
+          </div>
+          <div class="chart-card card">
+            <div class="chart-head">
+              <div>
+                <div class="chart-title">Noise Trend</div>
+                <div class="chart-sub">Reported ambient noise level</div>
+              </div>
+            </div>
+            <div class="chart-box"><canvas id="chartNoise"></canvas></div>
+          </div>
+          <div class="chart-card card">
+            <div class="chart-head">
+              <div>
+                <div class="chart-title">Brightness Trend</div>
+                <div class="chart-sub">Reported ambient light level</div>
+              </div>
+            </div>
+            <div class="chart-box"><canvas id="chartBright"></canvas></div>
+          </div>
+        </div>
+
+        <footer>
+          Powered by <b>AtriumIQ</b> — sensor data streamed from the Central
+          Atrium telemetry network
+        </footer>
+      </div>
+
+      <!-- ================= HISTORY ================= -->
+      <div class="view" id="view-history">
+        <div class="section-label">Reading History</div>
+        <div class="history-card card">
+          <div class="filters">
+            <div class="filter-group">
+              <label>Date</label>
+              <select id="fDate">
+                <option value="all">All dates</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Location</label>
+              <select id="fLocation">
+                <option value="all">Atrium + Outside</option>
+                <option value="atrium">Atrium only</option>
+                <option value="outside">Outside only</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label>Min. Temperature (°C)</label>
+              <input
+                type="number"
+                id="fTempMin"
+                placeholder="e.g. 25"
+                step="0.1"
+              />
+            </div>
+            <div class="filter-group">
+              <label>Max. Temperature (°C)</label>
+              <input
+                type="number"
+                id="fTempMax"
+                placeholder="e.g. 34"
+                step="0.1"
+              />
+            </div>
+          </div>
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th data-sort="date">
+                    Timestamp <span class="arrow">↕</span>
+                  </th>
+                  <th data-sort="atrium_temp">
+                    Atrium °C <span class="arrow">↕</span>
+                  </th>
+                  <th data-sort="outside_temp">
+                    Outside °C <span class="arrow">↕</span>
+                  </th>
+                  <th data-sort="diff">Δ °C <span class="arrow">↕</span></th>
+                  <th data-sort="brightness">
+                    Brightness <span class="arrow">↕</span>
+                  </th>
+                  <th data-sort="noise">Noise <span class="arrow">↕</span></th>
+                </tr>
+              </thead>
+              <tbody id="historyBody"></tbody>
+            </table>
+            <div class="table-empty" id="historyEmpty" style="display: none">
+              No readings match these filters.
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= REPORTS ================= -->
+      <div class="view" id="view-reports">
+        <div class="section-label">Student Reports</div>
+        <div class="grid-reports">
+          <div class="report-form card">
+            <div class="chart-title">How does the atrium feel right now?</div>
+            <div class="chart-sub" style="margin-top: 4px">
+              Your report helps other students right now — visible to everyone.
+            </div>
+            <div class="report-options" id="reportOptions">
+              <div class="report-opt" data-type="Too Hot">
+                <span class="ic">🥵</span>Too Hot
+              </div>
+              <div class="report-opt" data-type="Too Noisy">
+                <span class="ic">📢</span>Too Noisy
+              </div>
+              <div class="report-opt" data-type="Too Bright">
+                <span class="ic">☀️</span>Too Bright
+              </div>
+              <div class="report-opt" data-type="Too Dark">
+                <span class="ic">🌑</span>Too Dark
+              </div>
+              <div class="report-opt" data-type="Comfortable">
+                <span class="ic">✨</span>Comfortable
+              </div>
+              <div class="report-opt" data-type="Other">
+                <span class="ic">💬</span>Other
+              </div>
+            </div>
+            <textarea
+              class="report-details"
+              id="reportDetails"
+              maxlength="240"
+              placeholder="Write what you noticed..."
+            ></textarea>
+            <button class="report-submit" id="submitReport" disabled>
+              Submit Report
+            </button>
+            <div class="report-note" id="reportNote">
+              Select how the atrium feels, then submit.
+            </div>
+          </div>
+          <div class="report-stats card">
+            <div class="chart-title">Today's report breakdown</div>
+            <div class="rs-bars" id="rsBars"></div>
+            <div class="rs-feed">
+              <div class="rs-feed-title">Recent Reports</div>
+              <div class="rs-feed-list" id="rsFeed">
+                <div class="table-empty">No reports yet — be the first.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const DATA = [
+        {
+          date: "2026-07-12T00:01:04",
+          atrium_temp: 29.75,
+          outside_temp: 24.0,
+          brightness: "Dark",
+          noise: "Quiet",
+          diff: 5.75,
+        },
+        {
+          date: "2026-07-12T02:01:14",
+          atrium_temp: 28.75,
+          outside_temp: 20.6,
+          brightness: "Dark",
+          noise: "Mild noise",
+          diff: 8.15,
+        },
+        {
+          date: "2026-07-12T04:01:19",
+          atrium_temp: 27.81,
+          outside_temp: 19.7,
+          brightness: "Dark",
+          noise: "Quiet",
+          diff: 8.11,
+        },
+        {
+          date: "2026-07-12T06:01:24",
+          atrium_temp: 27.25,
+          outside_temp: 19.7,
+          brightness: "Normal brightness",
+          noise: "Quiet",
+          diff: 7.55,
+        },
+        {
+          date: "2026-07-12T09:01:26",
+          atrium_temp: 27.81,
+          outside_temp: 27.2,
+          brightness: "Bright",
+          noise: "Quiet",
+          diff: 0.61,
+        },
+        {
+          date: "2026-07-12T11:02:03",
+          atrium_temp: 29.12,
+          outside_temp: 26.7,
+          brightness: "Bright",
+          noise: "Mild noise",
+          diff: 2.42,
+        },
+        {
+          date: "2026-07-12T12:02:07",
+          atrium_temp: 29.87,
+          outside_temp: 28.1,
+          brightness: "Bright",
+          noise: "Mild noise",
+          diff: 1.77,
+        },
+        {
+          date: "2026-07-12T13:02:13",
+          atrium_temp: 30.81,
+          outside_temp: 28.9,
+          brightness: "Bright",
+          noise: "Mild noise",
+          diff: 1.91,
+        },
+        {
+          date: "2026-07-12T14:02:18",
+          atrium_temp: 31.81,
+          outside_temp: 30.3,
+          brightness: "Very bright",
+          noise: "Mild noise",
+          diff: 1.51,
+        },
+        {
+          date: "2026-07-12T15:02:24",
+          atrium_temp: 32.38,
+          outside_temp: 30.3,
+          brightness: "Very bright",
+          noise: "Mild noise",
+          diff: 2.08,
+        },
+        {
+          date: "2026-07-12T19:02:24",
+          atrium_temp: 31.69,
+          outside_temp: 29.9,
+          brightness: "Normal brightness",
+          noise: "Mild noise",
+          diff: 1.79,
+        },
+        {
+          date: "2026-07-12T20:02:31",
+          atrium_temp: 31.19,
+          outside_temp: 29.1,
+          brightness: "Dim",
+          noise: "Mild noise",
+          diff: 2.09,
+        },
+        {
+          date: "2026-07-12T21:02:43",
+          atrium_temp: 30.56,
+          outside_temp: 25.8,
+          brightness: "Dim",
+          noise: "Noisy",
+          diff: 4.76,
+        },
+        {
+          date: "2026-07-12T22:02:50",
+          atrium_temp: 30.06,
+          outside_temp: 25.8,
+          brightness: "Dim",
+          noise: "Mild noise",
+          diff: 4.26,
+        },
+        {
+          date: "2026-07-12T23:02:55",
+          atrium_temp: 29.56,
+          outside_temp: 24.8,
+          brightness: "Dim",
+          noise: "Quiet",
+          diff: 4.76,
+        },
+        {
+          date: "2026-07-13T00:03:00",
+          atrium_temp: 29.06,
+          outside_temp: 22.8,
+          brightness: "Dark",
+          noise: "Mild noise",
+          diff: 6.26,
+        },
+        {
+          date: "2026-07-13T02:03:05",
+          atrium_temp: 28.12,
+          outside_temp: 19.6,
+          brightness: "Dark",
+          noise: "Quiet",
+          diff: 8.52,
+        },
+        {
+          date: "2026-07-13T04:03:09",
+          atrium_temp: 27.31,
+          outside_temp: 18.9,
+          brightness: "Dark",
+          noise: "Quiet",
+          diff: 8.41,
+        },
+        {
+          date: "2026-07-13T10:03:12",
+          atrium_temp: 28.5,
+          outside_temp: 31.1,
+          brightness: "Bright",
+          noise: "Noisy",
+          diff: -2.6,
+        },
+        {
+          date: "2026-07-13T11:03:22",
+          atrium_temp: 29.25,
+          outside_temp: 31.1,
+          brightness: "Bright",
+          noise: "Mild noise",
+          diff: -1.85,
+        },
+        {
+          date: "2026-07-13T12:03:30",
+          atrium_temp: 30.19,
+          outside_temp: 31.1,
+          brightness: "Bright",
+          noise: "Noisy",
+          diff: -0.91,
+        },
+        {
+          date: "2026-07-13T13:03:36",
+          atrium_temp: 31.31,
+          outside_temp: 32.0,
+          brightness: "Bright",
+          noise: "Noisy",
+          diff: -0.69,
+        },
+        {
+          date: "2026-07-13T14:04:44",
+          atrium_temp: 32.31,
+          outside_temp: 32.6,
+          brightness: "Very bright",
+          noise: "Mild noise",
+          diff: -0.29,
+        },
+        {
+          date: "2026-07-13T15:04:56",
+          atrium_temp: 32.88,
+          outside_temp: 33.9,
+          brightness: "Very bright",
+          noise: "Noisy",
+          diff: -1.02,
+        },
+        {
+          date: "2026-07-13T20:04:57",
+          atrium_temp: 32.0,
+          outside_temp: 29.8,
+          brightness: "Dim",
+          noise: "Noisy",
+          diff: 2.2,
+        },
+        {
+          date: "2026-07-13T22:05:05",
+          atrium_temp: 30.94,
+          outside_temp: 28.1,
+          brightness: "Dim",
+          noise: "Mild noise",
+          diff: 2.84,
+        },
+        {
+          date: "2026-07-13T23:05:10",
+          atrium_temp: 30.44,
+          outside_temp: 25.8,
+          brightness: "Dim",
+          noise: "Mild noise",
+          diff: 4.64,
+        },
+        {
+          date: "2026-07-14T02:05:12",
+          atrium_temp: 29.19,
+          outside_temp: 25.1,
+          brightness: "Dark",
+          noise: "Quiet",
+          diff: 4.09,
+        },
+        {
+          date: "2026-07-14T04:05:17",
+          atrium_temp: 28.5,
+          outside_temp: 24.0,
+          brightness: "Dark",
+          noise: "Quiet",
+          diff: 4.5,
+        },
+        {
+          date: "2026-07-14T09:05:16",
+          atrium_temp: 29.06,
+          outside_temp: 30.2,
+          brightness: "Bright",
+          noise: "Mild noise",
+          diff: -1.14,
+        },
+        {
+          date: "2026-07-14T10:05:21",
+          atrium_temp: 29.69,
+          outside_temp: 32.2,
+          brightness: "Bright",
+          noise: "Mild noise",
+          diff: -2.51,
+        },
+        {
+          date: "2026-07-14T11:05:32",
+          atrium_temp: 30.44,
+          outside_temp: 34.2,
+          brightness: "Bright",
+          noise: "Noisy",
+          diff: -3.76,
+        },
+        {
+          date: "2026-07-14T12:05:44",
+          atrium_temp: 31.25,
+          outside_temp: 34.2,
+          brightness: "Bright",
+          noise: "Noisy",
+          diff: -2.95,
+        },
+        {
+          date: "2026-07-14T13:05:56",
+          atrium_temp: 32.25,
+          outside_temp: 36.1,
+          brightness: "Bright",
+          noise: "Noisy",
+          diff: -3.85,
+        },
+        {
+          date: "2026-07-14T14:06:09",
+          atrium_temp: 33.38,
+          outside_temp: 38.0,
+          brightness: "Very bright",
+          noise: "Very noisy",
+          diff: -4.62,
+        },
+        {
+          date: "2026-07-14T19:06:13",
+          atrium_temp: 32.81,
+          outside_temp: 34.4,
+          brightness: "Normal brightness",
+          noise: "Mild noise",
+          diff: -1.59,
+        },
+        {
+          date: "2026-07-14T20:06:37",
+          atrium_temp: 32.31,
+          outside_temp: 33.2,
+          brightness: "Dim",
+          noise: "Mild noise",
+          diff: -0.89,
+        },
+        {
+          date: "2026-07-14T21:06:43",
+          atrium_temp: 31.81,
+          outside_temp: 30.7,
+          brightness: "Dim",
+          noise: "Noisy",
+          diff: 1.11,
+        },
+        {
+          date: "2026-07-14T22:06:48",
+          atrium_temp: 31.25,
+          outside_temp: 30.7,
+          brightness: "Dim",
+          noise: "Mild noise",
+          diff: 0.55,
+        },
+        {
+          date: "2026-07-14T23:06:59",
+          atrium_temp: 30.75,
+          outside_temp: 27.9,
+          brightness: "Dim",
+          noise: "Mild noise",
+          diff: 2.85,
+        },
+      ];
+
+      /* ---------------- helpers ---------------- */
+      function fmtTime(iso) {
+        const d = new Date(iso);
+        return d.toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      }
+      function fmtHourLabel(iso) {
+        const d = new Date(iso);
+        return d.toLocaleTimeString("en-US", {
+          hour: "2-digit",
+          minute: "2-digit",
+          hour12: false,
+        });
+      }
+      function brightRank(b) {
+        return (
+          {
+            Dark: 0,
+            Dim: 1,
+            "Normal brightness": 2,
+            Bright: 3,
+            "Very bright": 4,
+          }[b] ?? 2
+        );
+      }
+      function noiseRank(n) {
+        return { Quiet: 0, "Mild noise": 1, Noisy: 2, "Very noisy": 3 }[n] ?? 1;
+      }
+      function brightColor(b) {
+        return ["#001D39", "#49769F", "#6EA2B3", "#7BBDE8", "#BDD8E9"][
+          brightRank(b)
+        ];
+      }
+      function noiseColor(n) {
+        return ["#7EE0A8", "#7BBDE8", "#BDD8E9", "#FF9B7A"][noiseRank(n)];
+      }
+      function hourRange(hour, span = 2) {
+        return (
+          String(hour).padStart(2, "0") +
+          ":00–" +
+          String((hour + span) % 24).padStart(2, "0") +
+          ":00"
+        );
+      }
+
+      const I18N = {
+        en: {
+          pageTitle: "AtriumIQ — Smart Comfort Analytics",
+          tag: "Smart Comfort Analytics · Nazarbayev University",
+          overview: "Overview",
+          history: "History",
+          reports: "Reports",
+          lightMode: "Light mode",
+          darkMode: "Dark mode",
+          liveConnected: "Live feed connected",
+          connecting: "Connecting to FastAPI...",
+          liveFastApi: "Live FastAPI data",
+          demoOffline: "Demo data - FastAPI offline",
+          decisionKicker: "Should I go to the atrium right now?",
+          checking: "Checking current conditions...",
+          decisionIntro:
+            "AtriumIQ is combining temperature, noise, brightness, and outside comparison into one student-friendly answer.",
+          liveDecision: "Live decision",
+          heroEyebrow: "Current Atrium Status · Right Now",
+          calculating: "Calculating...",
+          heroDesc:
+            "Reading the latest sensor sweep from the atrium network to judge whether now is a good time to study, meet, or unwind.",
+          lastUpdated: "Last updated {time}",
+          lastUpdatedBlank: "Last updated —",
+          comfort: "Comfort",
+          great: "Great 70+",
+          fair: "Fair 40-69",
+          poor: "Poor <40",
+          moodFeature: "Atrium Mood Map · Signature Feature",
+          moodTitle: "Interactive Atrium Mood Map",
+          moodSub:
+            "A visual read of how comfortable the atrium feels right now.",
+          moodScore: "Mood score",
+          moodPending:
+            "Comfort state will appear once the latest reading is analyzed.",
+          assistantTitle: "Smart Student Assistant",
+          assistantSub:
+            "Personalized recommendations generated from the latest measurements and daily patterns.",
+          currentConditions: "Current Conditions",
+          atriumTemp: "Atrium Temperature",
+          outdoorTemp: "Outdoor Temperature",
+          noiseLevel: "Noise Level",
+          brightnessLevel: "Brightness Level",
+          tempDiff: "Temp. Difference (In - Out)",
+          bestTimeFinder: "Best Time Finder",
+          scoreExplanation: "Comfort Score Explanation",
+          whyScore: "Why this score?",
+          temperature: "Temperature",
+          noise: "Noise",
+          brightness: "Brightness",
+          comfortTimeline: "Comfort Timeline",
+          timelineSub:
+            "Hourly comfort, temperature, noise, and brightness for the latest day",
+          analytics: "Analytics · Last 3 Days",
+          minTemp: "Min atrium temperature",
+          maxTemp: "Max atrium temperature",
+          avgTemp: "Average temperature",
+          bestStudy: "Best time to study",
+          bestMeeting: "Best time for meetings",
+          coolestPeriod: "Coolest period of day",
+          advancedAnalytics: "Advanced Analytics",
+          trends: "Trends",
+          tempTrend: "Temperature Trend",
+          tempTrendSub: "Atrium vs. outdoor, last 40 readings",
+          atrium: "Atrium",
+          outside: "Outside",
+          comparison: "Atrium vs Outside Comparison",
+          comparisonSub: "Insulation gap over time (°C)",
+          gap: "Δ Gap",
+          noiseTrend: "Noise Trend",
+          noiseTrendSub: "Reported ambient noise level",
+          brightnessTrend: "Brightness Trend",
+          brightnessTrendSub: "Reported ambient light level",
+          footer:
+            "Powered by <b>AtriumIQ</b> — sensor data streamed from the Central Atrium telemetry network",
+          readingHistory: "Reading History",
+          date: "Date",
+          location: "Location",
+          allDates: "All dates",
+          locAll: "Atrium + Outside",
+          locAtrium: "Atrium only",
+          locOutside: "Outside only",
+          minTemperature: "Min. Temperature (°C)",
+          maxTemperature: "Max. Temperature (°C)",
+          timestamp: "Timestamp",
+          atriumC: "Atrium °C",
+          outsideC: "Outside °C",
+          noHistory: "No readings match these filters.",
+          studentReports: "Student Reports",
+          reportPrompt: "How does the atrium feel right now?",
+          reportSub:
+            "Your report helps other students right now — visible to everyone.",
+          submitReport: "Submit Report",
+          reportNote: "Select how the atrium feels, then submit.",
+          breakdown: "Today's report breakdown",
+          recentReports: "Recent Reports",
+          emptyReports: "No reports yet — be the first.",
+          readySubmit: "Ready to submit: {type}",
+          readySubmitApi: "Ready to submit to FastAPI: {type}",
+          submitting: "Submitting...",
+          thanksReport:
+            "Thanks — your report is now visible to other students.",
+          failReport: "Could not submit right now — please try again.",
+          thanksApi: "Thanks — your report was saved in FastAPI.",
+          failApi:
+            "Could not submit to FastAPI. Is the backend running on port 8000?",
+          liveMood: "Live mood",
+          satisfaction: "{rate}% satisfaction, top issue: {issue}",
+          reportCount: "{count} reports",
+          atriumReport: "Atrium report",
+          recommendation: "Recommendation:",
+          flat: "flat",
+          focus: "Focus Zone",
+          social: "Social Zone",
+          busy: "Busy Zone",
+          avoid: "Avoid Zone",
+          focusHeadline: "YES - Great for studying right now",
+          socialHeadline: "MAYBE - Suitable for meetings but slightly noisy",
+          busyHeadline: "MAYBE - Usable, but comfort is slipping",
+          avoidHeadline: "NO - Conditions are currently uncomfortable",
+          yes: "YES",
+          maybe: "MAYBE",
+          no: "NO",
+          focusCopy: "Ideal for studying and focused work.",
+          socialCopy: "Suitable for meetings, collaboration, and casual work.",
+          busyCopy: "Conditions are becoming less comfortable.",
+          avoidCopy: "Too noisy, hot, or uncomfortable.",
+          focusAssistant: "Great time to study now.",
+          socialAssistant: "Current conditions are ideal for group meetings.",
+          busyAssistant: "Noise or temperature may reduce focus.",
+          avoidAssistant:
+            "Consider returning later or choosing a quieter study space.",
+          excellent: "Excellent",
+          good: "Good",
+          moderate: "Moderate",
+          poorQuality: "Poor",
+          decisionReason:
+            "{temp}°C inside, {noise}, and {bright} lighting produce a {score}/100 comfort score.",
+          decisionReasonApi:
+            "{temp}°C inside, {noise}, {bright} lighting, and a {diff}°C outside gap.",
+          bestStudyToday: "Best Study Time Today",
+          bestStudyReason:
+            "Lowest combined noise penalty with the most comfortable temperature and usable lighting.",
+          bestMeetingTime: "Best Meeting Time",
+          bestMeetingReason:
+            "Balanced brightness and manageable noise for collaboration.",
+          quietestTime: "Quietest Time",
+          quietestReason:
+            "{noise} conditions with a {score}/100 comfort score.",
+          coolestTime: "Coolest Time",
+          coolestReason: "Average atrium temperature near {temp}°C.",
+          noiseIncreasing: "Noise levels are increasing.",
+          noiseControlled: "Noise levels are currently controlled.",
+          tempHigher:
+            "Temperature is significantly higher than outside by {diff}°C.",
+          tempWithin: "Inside and outside temperatures are within {diff}°C.",
+          mostComfortable: "The atrium was most comfortable between {time}.",
+          considerReturn: "Consider returning after {time}.",
+          trend: "Trend: {trend}.",
+          stable: "Stable",
+          better: "Getting Better",
+          worse: "Getting Worse",
+          lunchNoise:
+            "Noise increases after lunch hours compared with the morning baseline.",
+          bestDayPart:
+            "The atrium remains most comfortable in this part of the day.",
+          avgIndoorGap:
+            "Average indoor temperature difference versus outdoor temperature.",
+          worstPeriod: "Most uncomfortable period based on comfort score.",
+          studyShare:
+            "Share of readings suitable for studying or focused work.",
+          beforeNoon: "Before noon",
+          afterNoon: "After noon",
+          dark: "Dark",
+          dim: "Dim",
+          normalBrightness: "Normal brightness",
+          bright: "Bright",
+          veryBright: "Very bright",
+          quiet: "Quiet",
+          mildNoise: "Mild noise",
+          noisy: "Noisy",
+          veryNoisy: "Very noisy",
+          tooHot: "Too Hot",
+          tooNoisy: "Too Noisy",
+          tooBright: "Too Bright",
+          tooDark: "Too Dark",
+          comfortable: "Comfortable",
+          other: "Other",
+        },
+        kk: {
+          pageTitle: "AtriumIQ — Ақылды жайлылық аналитикасы",
+          tag: "Ақылды жайлылық аналитикасы · Назарбаев Университеті",
+          overview: "Шолу",
+          history: "Тарих",
+          reports: "Хабарламалар",
+          lightMode: "Light mode",
+          darkMode: "Dark mode",
+          liveConnected: "Live feed қосылды",
+          connecting: "FastAPI-ға қосылып жатыр...",
+          liveFastApi: "FastAPI live дерегі",
+          demoOffline: "Demo дерек - FastAPI offline",
+          decisionKicker: "Қазір атриумға баруға бола ма?",
+          checking: "Қазіргі жағдай тексерілуде...",
+          decisionIntro:
+            "AtriumIQ температура, шу, жарық және сыртқы салыстыруды студентке түсінікті бір жауапқа біріктіреді.",
+          liveDecision: "Live шешім",
+          heroEyebrow: "Атриумның қазіргі күйі · дәл қазір",
+          calculating: "Есептелуде...",
+          heroDesc:
+            "Атриум сенсорларынан соңғы деректер оқылып, қазір оқу, кездесу немесе демалуға қаншалықты ыңғайлы екені бағаланады.",
+          lastUpdated: "Соңғы жаңарту {time}",
+          lastUpdatedBlank: "Соңғы жаңарту —",
+          comfort: "Жайлылық",
+          great: "Керемет 70+",
+          fair: "Орташа 40-69",
+          poor: "Нашар <40",
+          moodFeature: "Атриум mood map · негізгі функция",
+          moodTitle: "Интерактивті Atrium Mood Map",
+          moodSub:
+            "Атриум дәл қазір қаншалықты жайлы екенін визуалды түрде көрсетеді.",
+          moodScore: "Mood score",
+          moodPending: "Соңғы дерек талданғаннан кейін жайлылық күйі шығады.",
+          assistantTitle: "Smart Student Assistant",
+          assistantSub:
+            "Соңғы өлшемдер мен күндік pattern негізіндегі жеке ұсыныстар.",
+          currentConditions: "Қазіргі жағдайлар",
+          atriumTemp: "Атриум температурасы",
+          outdoorTemp: "Сыртқы температура",
+          noiseLevel: "Шу деңгейі",
+          brightnessLevel: "Жарық деңгейі",
+          tempDiff: "Темп. айырмасы (ішкі - сыртқы)",
+          bestTimeFinder: "Ең жақсы уақыт",
+          scoreExplanation: "Жайлылық ұпайының түсіндірмесі",
+          whyScore: "Бұл ұпай неге?",
+          temperature: "Температура",
+          noise: "Шу",
+          brightness: "Жарық",
+          comfortTimeline: "Жайлылық timeline",
+          timelineSub:
+            "Соңғы күн бойынша сағаттық жайлылық, температура, шу және жарық",
+          analytics: "Аналитика · соңғы 3 күн",
+          minTemp: "Минимум атриум температурасы",
+          maxTemp: "Максимум атриум температурасы",
+          avgTemp: "Орташа температура",
+          bestStudy: "Оқуға ең жақсы уақыт",
+          bestMeeting: "Кездесуге ең жақсы уақыт",
+          coolestPeriod: "Күннің ең салқын уақыты",
+          advancedAnalytics: "Кеңейтілген аналитика",
+          trends: "Трендтер",
+          tempTrend: "Температура тренді",
+          tempTrendSub: "Атриум және сырт, соңғы 40 өлшем",
+          atrium: "Атриум",
+          outside: "Сырт",
+          comparison: "Атриум мен сыртты салыстыру",
+          comparisonSub: "Уақыт бойынша температура айырмасы (°C)",
+          gap: "Δ Айырма",
+          noiseTrend: "Шу тренді",
+          noiseTrendSub: "Қоршаған шу деңгейі",
+          brightnessTrend: "Жарық тренді",
+          brightnessTrendSub: "Қоршаған жарық деңгейі",
+          footer:
+            "<b>AtriumIQ</b> арқылы — дерек Central Atrium telemetry network жүйесінен келеді",
+          readingHistory: "Өлшемдер тарихы",
+          date: "Күні",
+          location: "Локация",
+          allDates: "Барлық күндер",
+          locAll: "Атриум + Сырт",
+          locAtrium: "Тек атриум",
+          locOutside: "Тек сырт",
+          minTemperature: "Мин. температура (°C)",
+          maxTemperature: "Макс. температура (°C)",
+          timestamp: "Уақыт",
+          atriumC: "Атриум °C",
+          outsideC: "Сырт °C",
+          noHistory: "Бұл фильтрге сәйкес өлшем жоқ.",
+          studentReports: "Студент хабарламалары",
+          reportPrompt: "Атриум қазір қалай сезіледі?",
+          reportSub:
+            "Сіздің хабарламаңыз басқа студенттерге көмектеседі және бәріне көрінеді.",
+          submitReport: "Жіберу",
+          reportNote: "Атриум қалай сезілетінін таңдаңыз, кейін жіберіңіз.",
+          breakdown: "Бүгінгі хабарламалар breakdown",
+          recentReports: "Соңғы хабарламалар",
+          emptyReports: "Әзірге хабарлама жоқ — бірінші болыңыз.",
+          readySubmit: "Жіберуге дайын: {type}",
+          readySubmitApi: "FastAPI-ға жіберуге дайын: {type}",
+          submitting: "Жіберіліп жатыр...",
+          thanksReport: "Рақмет — хабарламаңыз басқа студенттерге көрінеді.",
+          failReport: "Қазір жіберілмеді — қайта көріңіз.",
+          thanksApi: "Рақмет — хабарлама FastAPI-да сақталды.",
+          failApi: "FastAPI-ға жіберілмеді. Backend 8000 портында қосулы ма?",
+          liveMood: "Live mood",
+          satisfaction: "{rate}% қанағаттану, басты мәселе: {issue}",
+          reportCount: "{count} хабарлама",
+          atriumReport: "Атриум хабарламасы",
+          recommendation: "Ұсыныс:",
+          flat: "өзгеріс жоқ",
+          focus: "Focus Zone",
+          social: "Social Zone",
+          busy: "Busy Zone",
+          avoid: "Avoid Zone",
+          focusHeadline: "YES - қазір оқуға өте жақсы",
+          socialHeadline: "MAYBE - кездесуге болады, бірақ аздап шу бар",
+          busyHeadline: "MAYBE - қолдануға болады, бірақ жайлылық төмендеп тұр",
+          avoidHeadline: "NO - қазір ыңғайсыз",
+          yes: "YES",
+          maybe: "MAYBE",
+          no: "NO",
+          focusCopy: "Оқу мен фокус жұмысына өте ыңғайлы.",
+          socialCopy: "Кездесу, collaboration және casual work үшін ыңғайлы.",
+          busyCopy: "Жағдай біртіндеп жайсыз болып барады.",
+          avoidCopy: "Тым шулы, ыстық немесе жайсыз.",
+          focusAssistant: "Қазір оқуға жақсы уақыт.",
+          socialAssistant: "Қазіргі жағдай group meeting үшін ыңғайлы.",
+          busyAssistant: "Шу немесе температура фокусқа әсер етуі мүмкін.",
+          avoidAssistant:
+            "Кейінірек келуді немесе тынышырақ орын таңдауды қарастырыңыз.",
+          excellent: "Өте жақсы",
+          good: "Жақсы",
+          moderate: "Орташа",
+          poorQuality: "Нашар",
+          decisionReason:
+            "Іште {temp}°C, {noise}, {bright} жарық, жайлылық ұпайы {score}/100.",
+          decisionReasonApi:
+            "Іште {temp}°C, {noise}, {bright} жарық, сыртпен айырма {diff}°C.",
+          bestStudyToday: "Бүгін оқуға ең жақсы уақыт",
+          bestStudyReason:
+            "Шу penalty төмен, температура жайлы және жарық қолдануға ыңғайлы.",
+          bestMeetingTime: "Кездесуге ең жақсы уақыт",
+          bestMeetingReason:
+            "Collaboration үшін жарық balanced, шу manageable.",
+          quietestTime: "Ең тыныш уақыт",
+          quietestReason: "{noise} жағдайы және {score}/100 жайлылық ұпайы.",
+          coolestTime: "Ең салқын уақыт",
+          coolestReason: "Орташа атриум температурасы шамамен {temp}°C.",
+          noiseIncreasing: "Шу деңгейі өсіп жатыр.",
+          noiseControlled: "Шу деңгейі қазір бақылауда.",
+          tempHigher: "Температура сырттан {diff}°C жоғары.",
+          tempWithin: "Ішкі және сыртқы температура айырмасы {diff}°C.",
+          mostComfortable: "Атриум ең жайлы болған уақыт: {time}.",
+          considerReturn: "{time} кейін қайта келуді қарастырыңыз.",
+          trend: "Тренд: {trend}.",
+          stable: "Тұрақты",
+          better: "Жақсарып келеді",
+          worse: "Нашарлап келеді",
+          lunchNoise:
+            "Түскі уақыттан кейін шу таңертеңгі деңгеймен салыстырғанда өседі.",
+          bestDayPart: "Күннің осы бөлігінде атриум ең жайлы болып қалады.",
+          avgIndoorGap:
+            "Ішкі температураның сыртқы температурадан орташа айырмасы.",
+          worstPeriod: "Жайлылық ұпайы бойынша ең ыңғайсыз кезең.",
+          studyShare: "Оқу немесе фокус жұмысына жарамды өлшемдер үлесі.",
+          beforeNoon: "Түске дейін",
+          afterNoon: "Түстен кейін",
+          dark: "Қараңғы",
+          dim: "Күңгірт",
+          normalBrightness: "Қалыпты жарық",
+          bright: "Жарық",
+          veryBright: "Өте жарық",
+          quiet: "Тыныш",
+          mildNoise: "Аздап шу",
+          noisy: "Шулы",
+          veryNoisy: "Өте шулы",
+          tooHot: "Тым ыстық",
+          tooNoisy: "Тым шулы",
+          tooBright: "Тым жарық",
+          tooDark: "Тым қараңғы",
+          comfortable: "Жайлы",
+          other: "Басқа",
+        },
+        ru: {
+          pageTitle: "AtriumIQ — Умная аналитика комфорта",
+          tag: "Умная аналитика комфорта · Назарбаев Университет",
+          overview: "Обзор",
+          history: "История",
+          reports: "Отзывы",
+          lightMode: "Светлая тема",
+          darkMode: "Темная тема",
+          liveConnected: "Live feed подключен",
+          connecting: "Подключение к FastAPI...",
+          liveFastApi: "Live данные FastAPI",
+          demoOffline: "Demo данные - FastAPI offline",
+          decisionKicker: "Стоит ли идти в атриум прямо сейчас?",
+          checking: "Проверяем текущие условия...",
+          decisionIntro:
+            "AtriumIQ объединяет температуру, шум, яркость и сравнение с улицей в один понятный ответ для студентов.",
+          liveDecision: "Live решение",
+          heroEyebrow: "Текущий статус атриума · сейчас",
+          calculating: "Расчет...",
+          heroDesc:
+            "Читаем последние данные сенсоров атриума, чтобы понять, удобно ли сейчас учиться, встречаться или отдыхать.",
+          lastUpdated: "Обновлено {time}",
+          lastUpdatedBlank: "Обновлено —",
+          comfort: "Комфорт",
+          great: "Отлично 70+",
+          fair: "Средне 40-69",
+          poor: "Плохо <40",
+          moodFeature: "Карта настроения атриума · ключевая функция",
+          moodTitle: "Интерактивная Atrium Mood Map",
+          moodSub: "Визуальная оценка того, насколько комфортен атриум сейчас.",
+          moodScore: "Mood score",
+          moodPending:
+            "Состояние комфорта появится после анализа последнего измерения.",
+          assistantTitle: "Smart Student Assistant",
+          assistantSub:
+            "Персональные рекомендации на основе последних измерений и дневных паттернов.",
+          currentConditions: "Текущие условия",
+          atriumTemp: "Температура атриума",
+          outdoorTemp: "Температура снаружи",
+          noiseLevel: "Уровень шума",
+          brightnessLevel: "Уровень яркости",
+          tempDiff: "Разница температуры (внутри - снаружи)",
+          bestTimeFinder: "Лучшее время",
+          scoreExplanation: "Объяснение оценки комфорта",
+          whyScore: "Почему такая оценка?",
+          temperature: "Температура",
+          noise: "Шум",
+          brightness: "Яркость",
+          comfortTimeline: "Таймлайн комфорта",
+          timelineSub:
+            "Почасовой комфорт, температура, шум и яркость за последний день",
+          analytics: "Аналитика · последние 3 дня",
+          minTemp: "Мин. температура атриума",
+          maxTemp: "Макс. температура атриума",
+          avgTemp: "Средняя температура",
+          bestStudy: "Лучшее время для учебы",
+          bestMeeting: "Лучшее время для встреч",
+          coolestPeriod: "Самый прохладный период дня",
+          advancedAnalytics: "Расширенная аналитика",
+          trends: "Тренды",
+          tempTrend: "Тренд температуры",
+          tempTrendSub: "Атриум и улица, последние 40 измерений",
+          atrium: "Атриум",
+          outside: "Снаружи",
+          comparison: "Сравнение атриума и улицы",
+          comparisonSub: "Разница температуры во времени (°C)",
+          gap: "Δ Разница",
+          noiseTrend: "Тренд шума",
+          noiseTrendSub: "Заявленный уровень фонового шума",
+          brightnessTrend: "Тренд яркости",
+          brightnessTrendSub: "Заявленный уровень освещенности",
+          footer:
+            "Работает на <b>AtriumIQ</b> — данные поступают из телеметрической сети Central Atrium",
+          readingHistory: "История измерений",
+          date: "Дата",
+          location: "Локация",
+          allDates: "Все даты",
+          locAll: "Атриум + улица",
+          locAtrium: "Только атриум",
+          locOutside: "Только улица",
+          minTemperature: "Мин. температура (°C)",
+          maxTemperature: "Макс. температура (°C)",
+          timestamp: "Время",
+          atriumC: "Атриум °C",
+          outsideC: "Улица °C",
+          noHistory: "Нет измерений по этим фильтрам.",
+          studentReports: "Отзывы студентов",
+          reportPrompt: "Как ощущается атриум сейчас?",
+          reportSub:
+            "Ваш отзыв помогает другим студентам прямо сейчас и виден всем.",
+          submitReport: "Отправить",
+          reportNote: "Выберите ощущение атриума и отправьте.",
+          breakdown: "Разбивка отзывов за сегодня",
+          recentReports: "Последние отзывы",
+          emptyReports: "Отзывов пока нет — будьте первым.",
+          readySubmit: "Готово к отправке: {type}",
+          readySubmitApi: "Готово к отправке в FastAPI: {type}",
+          submitting: "Отправка...",
+          thanksReport: "Спасибо — ваш отзыв теперь виден другим студентам.",
+          failReport: "Не удалось отправить сейчас — попробуйте снова.",
+          thanksApi: "Спасибо — отзыв сохранен в FastAPI.",
+          failApi:
+            "Не удалось отправить в FastAPI. Backend запущен на порту 8000?",
+          liveMood: "Live mood",
+          satisfaction: "{rate}% удовлетворенности, главная проблема: {issue}",
+          reportCount: "{count} отзывов",
+          atriumReport: "Отзыв об атриуме",
+          recommendation: "Рекомендация:",
+          flat: "без изменений",
+          focus: "Focus Zone",
+          social: "Social Zone",
+          busy: "Busy Zone",
+          avoid: "Avoid Zone",
+          focusHeadline: "YES - сейчас отлично для учебы",
+          socialHeadline: "MAYBE - подходит для встреч, но немного шумно",
+          busyHeadline: "MAYBE - можно пользоваться, но комфорт снижается",
+          avoidHeadline: "NO - сейчас некомфортно",
+          yes: "YES",
+          maybe: "MAYBE",
+          no: "NO",
+          focusCopy: "Идеально для учебы и сфокусированной работы.",
+          socialCopy:
+            "Подходит для встреч, совместной работы и спокойных задач.",
+          busyCopy: "Условия становятся менее комфортными.",
+          avoidCopy: "Слишком шумно, жарко или некомфортно.",
+          focusAssistant: "Сейчас хорошее время для учебы.",
+          socialAssistant: "Текущие условия подходят для групповых встреч.",
+          busyAssistant: "Шум или температура могут мешать фокусу.",
+          avoidAssistant:
+            "Рассмотрите возвращение позже или более тихое место.",
+          excellent: "Отлично",
+          good: "Хорошо",
+          moderate: "Средне",
+          poorQuality: "Плохо",
+          decisionReason:
+            "Внутри {temp}°C, {noise}, освещение {bright}, оценка комфорта {score}/100.",
+          decisionReasonApi:
+            "Внутри {temp}°C, {noise}, освещение {bright}, разница с улицей {diff}°C.",
+          bestStudyToday: "Лучшее время для учебы сегодня",
+          bestStudyReason:
+            "Минимальный штраф за шум, комфортная температура и подходящее освещение.",
+          bestMeetingTime: "Лучшее время для встреч",
+          bestMeetingReason:
+            "Сбалансированная яркость и приемлемый шум для совместной работы.",
+          quietestTime: "Самое тихое время",
+          quietestReason: "Условия: {noise}, оценка комфорта {score}/100.",
+          coolestTime: "Самое прохладное время",
+          coolestReason: "Средняя температура атриума около {temp}°C.",
+          noiseIncreasing: "Уровень шума растет.",
+          noiseControlled: "Уровень шума сейчас под контролем.",
+          tempHigher: "Температура выше наружной на {diff}°C.",
+          tempWithin: "Температуры внутри и снаружи отличаются на {diff}°C.",
+          mostComfortable: "Атриум был наиболее комфортным в {time}.",
+          considerReturn: "Рассмотрите возвращение после {time}.",
+          trend: "Тренд: {trend}.",
+          stable: "Стабильно",
+          better: "Становится лучше",
+          worse: "Становится хуже",
+          lunchNoise:
+            "После обеда шум повышается относительно утреннего уровня.",
+          bestDayPart: "В этой части дня атриум остается наиболее комфортным.",
+          avgIndoorGap:
+            "Средняя разница внутренней температуры относительно наружной.",
+          worstPeriod: "Самый некомфортный период по оценке комфорта.",
+          studyShare:
+            "Доля измерений, подходящих для учебы или фокусной работы.",
+          beforeNoon: "До полудня",
+          afterNoon: "После полудня",
+          dark: "Темно",
+          dim: "Тускло",
+          normalBrightness: "Нормальная яркость",
+          bright: "Ярко",
+          veryBright: "Очень ярко",
+          quiet: "Тихо",
+          mildNoise: "Небольшой шум",
+          noisy: "Шумно",
+          veryNoisy: "Очень шумно",
+          tooHot: "Слишком жарко",
+          tooNoisy: "Слишком шумно",
+          tooBright: "Слишком ярко",
+          tooDark: "Слишком темно",
+          comfortable: "Комфортно",
+          other: "Другое",
+        },
+      };
+
+      const currentLang = I18N[localStorage.getItem("atriumiq:lang")]
+        ? localStorage.getItem("atriumiq:lang")
+        : "en";
+      document.documentElement.lang = currentLang;
+      function tx(key, params = {}) {
+        const text = I18N[currentLang][key] || I18N.en[key] || key;
+        return Object.entries(params).reduce(
+          (out, [k, v]) => out.replaceAll(`{${k}}`, v),
+          text,
+        );
+      }
+      function setText(selector, value) {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = value;
+      }
+      function setStatusPill(text) {
+        const pill = document.querySelector(".status-pill");
+        if (!pill) return;
+        pill.innerHTML = '<span class="dot"></span> ' + text;
+      }
+      function localNoise(value) {
+        return {
+          Quiet: "quiet",
+          "Mild noise": "mildNoise",
+          Noisy: "noisy",
+          "Very noisy": "veryNoisy",
+        }[value]
+          ? tx(
+              {
+                Quiet: "quiet",
+                "Mild noise": "mildNoise",
+                Noisy: "noisy",
+                "Very noisy": "veryNoisy",
+              }[value],
+            )
+          : value;
+      }
+      function localBright(value) {
+        return {
+          Dark: "dark",
+          Dim: "dim",
+          "Normal brightness": "normalBrightness",
+          Bright: "bright",
+          "Very bright": "veryBright",
+        }[value]
+          ? tx(
+              {
+                Dark: "dark",
+                Dim: "dim",
+                "Normal brightness": "normalBrightness",
+                Bright: "bright",
+                "Very bright": "veryBright",
+              }[value],
+            )
+          : value;
+      }
+      const REPORT_LABELS = {
+        "Too Hot": "tooHot",
+        "Too Noisy": "tooNoisy",
+        "Too Bright": "tooBright",
+        "Too Dark": "tooDark",
+        Comfortable: "comfortable",
+        Other: "other",
+      };
+      function reportTypeLabel(type) {
+        return tx(REPORT_LABELS[type] || "other");
+      }
+      function applyStaticTranslations() {
+        document.title = tx("pageTitle");
+        setText(".brand-text .tag", tx("tag"));
+        document.querySelector('button[data-view="overview"]').textContent =
+          tx("overview");
+        document.querySelector('button[data-view="history"]').textContent =
+          tx("history");
+        document.querySelector('button[data-view="reports"]').textContent =
+          tx("reports");
+        document
+          .querySelectorAll(".lang-btn")
+          .forEach((btn) =>
+            btn.classList.toggle("active", btn.dataset.lang === currentLang),
+          );
+        setText(
+          "#themeToggle",
+          document.body.classList.contains("light")
+            ? tx("darkMode")
+            : tx("lightMode"),
+        );
+        setStatusPill(tx("liveConnected"));
+        setText(".decision-kicker", tx("decisionKicker"));
+        setText("#decisionMain", tx("checking"));
+        setText("#decisionReason", tx("decisionIntro"));
+        setText("#decisionPill", tx("liveDecision"));
+        setText(".hero-eyebrow", tx("heroEyebrow"));
+        setText("#comfortStatus", tx("calculating"));
+        setText("#comfortDesc", tx("heroDesc"));
+        setText("#lastUpdated", tx("lastUpdatedBlank"));
+        setText(".gauge-center .lbl", tx("comfort"));
+        document
+          .querySelector(".gauge-legend")
+          ?.replaceChildren(
+            Object.assign(document.createElement("span"), {
+              innerHTML: '<i style="background:#7EE0A8"></i>' + tx("great"),
+            }),
+            Object.assign(document.createElement("span"), {
+              innerHTML: '<i style="background:#BDD8E9"></i>' + tx("fair"),
+            }),
+            Object.assign(document.createElement("span"), {
+              innerHTML: '<i style="background:#FF9B7A"></i>' + tx("poor"),
+            }),
+          );
+        const sectionKeys = [
+          "moodFeature",
+          "currentConditions",
+          "bestTimeFinder",
+          "scoreExplanation",
+          "analytics",
+          "advancedAnalytics",
+          "trends",
+          "readingHistory",
+          "studentReports",
+        ];
+        document.querySelectorAll(".section-label").forEach((el, i) => {
+          if (sectionKeys[i]) el.textContent = tx(sectionKeys[i]);
+        });
+        setText(".mood-title", tx("moodTitle"));
+        setText(".mood-sub", tx("moodSub"));
+        setText(".mood-orb .label", tx("moodScore"));
+        setText("#moodName", tx("calculating"));
+        setText("#moodCopy", tx("moodPending"));
+        document.querySelectorAll(
+          ".assistant-card .chart-title",
+        )[0].textContent = tx("assistantTitle");
+        document.querySelectorAll(".assistant-card .chart-sub")[0].textContent =
+          tx("assistantSub");
+        document
+          .querySelectorAll(".cond-label")
+          .forEach(
+            (el, i) =>
+              (el.textContent = [
+                tx("atriumTemp"),
+                tx("outdoorTemp"),
+                tx("noiseLevel"),
+                tx("brightnessLevel"),
+                tx("tempDiff"),
+              ][i]),
+          );
+        setText(".score-breakdown .chart-title", tx("whyScore"));
+        document
+          .querySelectorAll(".impact-row span")
+          .forEach(
+            (el, i) =>
+              (el.textContent = [
+                tx("temperature"),
+                tx("noise"),
+                tx("brightness"),
+              ][i]),
+          );
+        document.querySelector(".timeline-card .chart-title").textContent =
+          tx("comfortTimeline");
+        document.querySelector(".timeline-card .chart-sub").textContent =
+          tx("timelineSub");
+        document
+          .querySelectorAll(".an-label")
+          .forEach(
+            (el, i) =>
+              (el.textContent = [
+                tx("minTemp"),
+                tx("maxTemp"),
+                tx("avgTemp"),
+                tx("bestStudy"),
+                tx("bestMeeting"),
+                tx("coolestPeriod"),
+              ][i]),
+          );
+        const charts = document.querySelectorAll(".chart-card");
+        charts[0].querySelector(".chart-title").textContent = tx("tempTrend");
+        charts[0].querySelector(".chart-sub").textContent = tx("tempTrendSub");
+        charts[0].querySelector(".chart-legend").innerHTML =
+          `<span><i style="background:#7BBDE8"></i>${tx("atrium")}</span><span><i style="background:#6EA2B3"></i>${tx("outside")}</span>`;
+        charts[1].querySelector(".chart-title").textContent = tx("comparison");
+        charts[1].querySelector(".chart-sub").textContent = tx("comparisonSub");
+        charts[1].querySelector(".chart-legend").innerHTML =
+          `<span><i style="background:#BDD8E9"></i>${tx("gap")}</span>`;
+        charts[2].querySelector(".chart-title").textContent = tx("noiseTrend");
+        charts[2].querySelector(".chart-sub").textContent = tx("noiseTrendSub");
+        charts[3].querySelector(".chart-title").textContent =
+          tx("brightnessTrend");
+        charts[3].querySelector(".chart-sub").textContent =
+          tx("brightnessTrendSub");
+        document.querySelector("footer").innerHTML = tx("footer");
+        document
+          .querySelectorAll(".filter-group label")
+          .forEach(
+            (el, i) =>
+              (el.textContent = [
+                tx("date"),
+                tx("location"),
+                tx("minTemperature"),
+                tx("maxTemperature"),
+              ][i]),
+          );
+        document.querySelector('#fDate option[value="all"]').textContent =
+          tx("allDates");
+        document.querySelector('#fLocation option[value="all"]').textContent =
+          tx("locAll");
+        document.querySelector(
+          '#fLocation option[value="atrium"]',
+        ).textContent = tx("locAtrium");
+        document.querySelector(
+          '#fLocation option[value="outside"]',
+        ).textContent = tx("locOutside");
+        document.querySelectorAll("thead th").forEach((el, i) => {
+          el.innerHTML =
+            [
+              tx("timestamp"),
+              tx("atriumC"),
+              tx("outsideC"),
+              "Δ °C",
+              tx("brightness"),
+              tx("noise"),
+            ][i] + ' <span class="arrow">↕</span>';
+        });
+        setText("#historyEmpty", tx("noHistory"));
+        document.querySelector(".report-form .chart-title").textContent =
+          tx("reportPrompt");
+        document.querySelector(".report-form .chart-sub").textContent =
+          tx("reportSub");
+        document.querySelectorAll(".report-opt").forEach((opt) => {
+          opt.lastChild.textContent = reportTypeLabel(opt.dataset.type);
+        });
+        setText("#submitReport", tx("submitReport"));
+        setText("#reportNote", tx("reportNote"));
+        document.querySelector(".report-stats .chart-title").textContent =
+          tx("breakdown");
+        setText(".rs-feed-title", tx("recentReports"));
+        document.querySelectorAll(".table-empty").forEach((el) => {
+          if (el.id !== "historyEmpty") el.textContent = tx("emptyReports");
+        });
+      }
+      document.querySelectorAll(".lang-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          localStorage.setItem("atriumiq:lang", btn.dataset.lang);
+          window.location.reload();
+        });
+      });
+      applyStaticTranslations();
+
+      /* ---------------- comfort score ---------------- */
+      function comfortBreakdown(rec) {
+        const tempImpact = Math.max(
+          0,
+          Math.round(45 - Math.abs(rec.atrium_temp - 26) * 7),
+        );
+        const noiseImpact = Math.max(
+          0,
+          Math.round(35 - noiseRank(rec.noise) * 11),
+        );
+        const brightImpact = Math.max(
+          0,
+          Math.round(20 - Math.abs(brightRank(rec.brightness) - 2.5) * 4),
+        );
+        return {
+          tempImpact,
+          noiseImpact,
+          brightImpact,
+          total: Math.min(100, tempImpact + noiseImpact + brightImpact),
+        };
+      }
+      function comfortScore(rec) {
+        return Math.max(0, Math.min(100, comfortBreakdown(rec).total));
+      }
+      function moodForScore(score) {
+        if (score >= 80)
+          return {
+            key: "focus",
+            name: tx("focus"),
+            range: "80–100",
+            color: "#7EE0A8",
+            color2: "#7BBDE8",
+            glow: "rgba(126,224,168,.42)",
+            decision: tx("yes"),
+            icon: "✅",
+            headline: tx("focusHeadline"),
+            copy: tx("focusCopy"),
+            assistant: tx("focusAssistant"),
+          };
+        if (score >= 60)
+          return {
+            key: "social",
+            name: tx("social"),
+            range: "60–79",
+            color: "#BDD8E9",
+            color2: "#7BBDE8",
+            glow: "rgba(189,216,233,.38)",
+            decision: tx("maybe"),
+            icon: "⚠️",
+            headline: tx("socialHeadline"),
+            copy: tx("socialCopy"),
+            assistant: tx("socialAssistant"),
+          };
+        if (score >= 40)
+          return {
+            key: "busy",
+            name: tx("busy"),
+            range: "40–59",
+            color: "#FFB15C",
+            color2: "#BDD8E9",
+            glow: "rgba(255,177,92,.38)",
+            decision: tx("maybe"),
+            icon: "⚠️",
+            headline: tx("busyHeadline"),
+            copy: tx("busyCopy"),
+            assistant: tx("busyAssistant"),
+          };
+        return {
+          key: "avoid",
+          name: tx("avoid"),
+          range: "0–39",
+          color: "#FF6B6B",
+          color2: "#FF9B7A",
+          glow: "rgba(255,107,107,.42)",
+          decision: tx("no"),
+          icon: "❌",
+          headline: tx("avoidHeadline"),
+          copy: tx("avoidCopy"),
+          assistant: tx("avoidAssistant"),
+        };
+      }
+      function qualityForScore(score) {
+        if (score >= 80) return { label: tx("excellent"), color: "#7EE0A8" };
+        if (score >= 60) return { label: tx("good"), color: "#BDD8E9" };
+        if (score >= 40) return { label: tx("moderate"), color: "#FFB15C" };
+        return { label: tx("poorQuality"), color: "#FF6B6B" };
+      }
+
+      const latest = DATA[DATA.length - 1];
+      const score = comfortScore(latest);
+      const breakdown = comfortBreakdown(latest);
+      const mood = moodForScore(score);
+      document.documentElement.style.setProperty("--mood-a", mood.color);
+      document.documentElement.style.setProperty("--mood-b", mood.color2);
+      document.documentElement.style.setProperty("--mood-glow", mood.glow);
+
+      /* ---------------- Hero ---------------- */
+      document.getElementById("comfortScore").textContent = score;
+      document.getElementById("gaugeNum").textContent = score;
+      const circumference = 2 * Math.PI * 78;
+      const arc = document.getElementById("gaugeArc");
+      arc.style.strokeDasharray = circumference;
+      arc.style.strokeDashoffset =
+        circumference - (score / 100) * circumference;
+
+      const statusEl = document.getElementById("comfortStatus");
+      const descEl = document.getElementById("comfortDesc");
+      statusEl.textContent = mood.name;
+      statusEl.style.color = mood.color;
+      statusEl.style.background = mood.color + "22";
+      descEl.textContent = mood.copy + " " + mood.assistant;
+      document.getElementById("lastUpdated").textContent = tx("lastUpdated", {
+        time: fmtTime(latest.date),
+      });
+      document.getElementById("decisionMain").textContent = mood.headline;
+      document.getElementById("decisionReason").textContent = tx(
+        "decisionReason",
+        {
+          temp: latest.atrium_temp.toFixed(1),
+          noise: localNoise(latest.noise).toLowerCase(),
+          bright: localBright(latest.brightness).toLowerCase(),
+          score,
+        },
+      );
+      document.getElementById("decisionPill").textContent =
+        mood.icon + " " + mood.decision;
+      document.getElementById("moodScore").textContent = score;
+      document.getElementById("moodName").textContent = mood.name;
+      document.getElementById("moodCopy").textContent = mood.copy;
+      document.getElementById("moodRange").textContent = mood.range;
+      document.getElementById("moodScale").innerHTML = [
+        {
+          key: "focus",
+          label: "Focus Zone",
+          range: "80–100",
+          color: "#7EE0A8",
+        },
+        {
+          key: "social",
+          label: "Social Zone",
+          range: "60–79",
+          color: "#BDD8E9",
+        },
+        { key: "busy", label: "Busy Zone", range: "40–59", color: "#FFB15C" },
+        { key: "avoid", label: "Avoid Zone", range: "0–39", color: "#FF6B6B" },
+      ]
+        .map(
+          (item) =>
+            `<div class="mood-scale-item ${item.key === mood.key ? "active" : ""}" style="--mood-a:${item.color}"><strong style="color:${item.color}">${tx(item.key)}</strong><br>${item.range}</div>`,
+        )
+        .join("");
+      document.getElementById("scoreTotal").textContent = score + "/100";
+      [
+        ["tempImpact", "tempImpactBar", breakdown.tempImpact, 45],
+        ["noiseImpact", "noiseImpactBar", breakdown.noiseImpact, 35],
+        ["brightImpact", "brightImpactBar", breakdown.brightImpact, 20],
+      ].forEach(([labelId, barId, value, max]) => {
+        document.getElementById(labelId).textContent = "+" + value;
+        document.getElementById(barId).style.width = (value / max) * 100 + "%";
+      });
+
+      /* ---------------- Current conditions ---------------- */
+      document.getElementById("valAtriumTemp").innerHTML =
+        latest.atrium_temp.toFixed(1) + "<small>°C</small>";
+      document.getElementById("valOutsideTemp").innerHTML =
+        (latest.outside_temp != null ? latest.outside_temp.toFixed(1) : "—") +
+        "<small>°C</small>";
+      document.getElementById("valNoise").textContent = localNoise(
+        latest.noise,
+      );
+      document.getElementById("valBright").textContent = localBright(
+        latest.brightness,
+      );
+      document.getElementById("valDiff").innerHTML =
+        (latest.diff != null
+          ? (latest.diff > 0 ? "+" : "") + latest.diff.toFixed(1)
+          : "—") + "<small>°C</small>";
+
+      const prev = DATA[DATA.length - 2] || latest;
+      function trendBadge(elId, cur, prevVal, unit) {
+        const el = document.getElementById(elId);
+        const delta = cur - prevVal;
+        if (Math.abs(delta) < 0.05) {
+          el.textContent = tx("flat");
+          el.className = "cond-trend trend-flat";
+          return;
+        }
+        el.textContent =
+          (delta > 0 ? "▲ " : "▼ ") + Math.abs(delta).toFixed(1) + unit;
+        el.className = "cond-trend " + (delta > 0 ? "trend-up" : "trend-down");
+      }
+      trendBadge("trendAtrium", latest.atrium_temp, prev.atrium_temp, "°");
+      if (latest.outside_temp != null && prev.outside_temp != null)
+        trendBadge("trendOutside", latest.outside_temp, prev.outside_temp, "°");
+      else document.getElementById("trendOutside").textContent = "—";
+      if (latest.diff != null && prev.diff != null)
+        trendBadge("trendDiff", latest.diff, prev.diff, "°");
+      else document.getElementById("trendDiff").textContent = "—";
+
+      document.getElementById("valNoiseTag").textContent = localNoise(
+        latest.noise,
+      );
+      document.getElementById("valNoiseTag").style.color = noiseColor(
+        latest.noise,
+      );
+      document.getElementById("valBrightTag").textContent = localBright(
+        latest.brightness,
+      );
+      document.getElementById("valBrightTag").style.color = brightColor(
+        latest.brightness,
+      );
+
+      /* ---------------- Analytics ---------------- */
+      const temps = DATA.map((d) => d.atrium_temp);
+      const min = Math.min(...temps),
+        max = Math.max(...temps);
+      const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+      document.getElementById("anMin").textContent = min.toFixed(1) + "°C";
+      document.getElementById("anMax").textContent = max.toFixed(1) + "°C";
+      document.getElementById("anAvg").textContent = avg.toFixed(1) + "°C";
+
+      function studyScore(r) {
+        return (
+          noiseRank(r.noise) * 16 +
+          Math.abs(r.atrium_temp - 26) * 7 +
+          Math.abs(brightRank(r.brightness) - 2.5) * 3
+        );
+      }
+      function meetingScore(r) {
+        return (
+          noiseRank(r.noise) * 8 +
+          Math.abs(brightRank(r.brightness) - 3) * 5 +
+          Math.abs(r.atrium_temp - 27) * 4
+        );
+      }
+      const bestStudy = DATA.reduce((a, b) =>
+        studyScore(b) < studyScore(a) ? b : a,
+      );
+      const bestMeeting = DATA.reduce((a, b) =>
+        meetingScore(b) < meetingScore(a) ? b : a,
+      );
+      document.getElementById("anStudy").textContent = hourRange(
+        new Date(bestStudy.date).getHours(),
+      );
+      document.getElementById("anMeeting").textContent = hourRange(
+        new Date(bestMeeting.date).getHours(),
+      );
+
+      const byHour = {};
+      DATA.forEach((r) => {
+        const h = new Date(r.date).getHours();
+        (byHour[h] = byHour[h] || []).push(r.atrium_temp);
+      });
+      let coolestHour = 0,
+        coolestAvg = 999;
+      Object.entries(byHour).forEach(([h, arr]) => {
+        const a = arr.reduce((x, y) => x + y, 0) / arr.length;
+        if (a < coolestAvg) {
+          coolestAvg = a;
+          coolestHour = h;
+        }
+      });
+      document.getElementById("anCoolest").textContent =
+        hourRange(+coolestHour);
+
+      const quietest = DATA.reduce((a, b) => {
+        const diff = noiseRank(b.noise) - noiseRank(a.noise);
+        return diff < 0 || (diff === 0 && comfortScore(b) > comfortScore(a))
+          ? b
+          : a;
+      });
+      const latestDay = latest.date.slice(0, 10);
+      const dayData = DATA.filter((r) => r.date.startsWith(latestDay));
+      const timelineSource = dayData.length ? dayData : DATA;
+      function closestReadingForHour(hour) {
+        return timelineSource.reduce((best, rec) => {
+          const recHour = new Date(rec.date).getHours();
+          const dist = Math.abs(recHour - hour);
+          const bestDist = Math.abs(new Date(best.date).getHours() - hour);
+          return dist < bestDist ? rec : best;
+        }, timelineSource[0]);
+      }
+      document.getElementById("bestFinder").innerHTML = [
+        {
+          label: "🏆 " + tx("bestStudyToday"),
+          time: hourRange(new Date(bestStudy.date).getHours()),
+          reason: tx("bestStudyReason"),
+        },
+        {
+          label: "🏆 " + tx("bestMeetingTime"),
+          time: hourRange(new Date(bestMeeting.date).getHours()),
+          reason: tx("bestMeetingReason"),
+        },
+        {
+          label: "🏆 " + tx("quietestTime"),
+          time: hourRange(new Date(quietest.date).getHours()),
+          reason: tx("quietestReason", {
+            noise: localNoise(quietest.noise),
+            score: comfortScore(quietest),
+          }),
+        },
+        {
+          label: "🏆 " + tx("coolestTime"),
+          time: hourRange(+coolestHour),
+          reason: tx("coolestReason", { temp: coolestAvg.toFixed(1) }),
+        },
+      ]
+        .map(
+          (item) => `
+  <div class="best-card card">
+    <div class="best-label">${item.label}</div>
+    <div class="best-time">${item.time}</div>
+    <div class="best-reason">${item.reason}</div>
+  </div>`,
+        )
+        .join("");
+
+      document.getElementById("comfortTimeline").innerHTML = Array.from(
+        { length: 24 },
+        (_, hour) => {
+          const rec = closestReadingForHour(hour);
+          const s = comfortScore(rec);
+          const q = qualityForScore(s);
+          const isBest = hour === new Date(bestStudy.date).getHours();
+          return `<div class="hour-tile ${isBest ? "best" : ""}">
+    <div class="hour-time">${String(hour).padStart(2, "0")}:00</div>
+    <div class="hour-grade" style="color:${q.color}; background:${q.color}22">${q.label}</div>
+    <div class="hour-score">${s}</div>
+    <div class="hour-metrics">${rec.atrium_temp.toFixed(1)}°C<br>${localNoise(rec.noise)}<br>${localBright(rec.brightness)}</div>
+  </div>`;
+        },
+      ).join("");
+
+      const currentTrend = score - comfortScore(prev);
+      const trendText =
+        Math.abs(currentTrend) < 4
+          ? tx("stable")
+          : currentTrend > 0
+            ? tx("better")
+            : tx("worse");
+      const assistantInsights = [
+        mood.assistant,
+        noiseRank(latest.noise) > noiseRank(prev.noise)
+          ? tx("noiseIncreasing")
+          : tx("noiseControlled"),
+        latest.diff > 3
+          ? tx("tempHigher", { diff: latest.diff.toFixed(1) })
+          : tx("tempWithin", { diff: Math.abs(latest.diff).toFixed(1) }),
+        tx("mostComfortable", {
+          time: hourRange(new Date(bestStudy.date).getHours()),
+        }),
+        score < 60
+          ? tx("considerReturn", {
+              time: hourRange(new Date(bestStudy.date).getHours()).split(
+                "–",
+              )[0],
+            })
+          : tx("trend", { trend: trendText }),
+      ];
+      document.getElementById("assistantInsights").innerHTML = assistantInsights
+        .map(
+          (txt, i) =>
+            `<div class="insight-item">${i === 0 ? "<strong>" + tx("recommendation") + "</strong> " : ""}${txt}</div>`,
+        )
+        .join("");
+
+      function avgOf(list, pick) {
+        return list.length
+          ? list.reduce((sum, item) => sum + pick(item), 0) / list.length
+          : 0;
+      }
+      const lunch = DATA.filter((r) => {
+        const h = new Date(r.date).getHours();
+        return h >= 12 && h <= 15;
+      });
+      const morning = DATA.filter((r) => {
+        const h = new Date(r.date).getHours();
+        return h >= 8 && h < 12;
+      });
+      const lunchNoise = avgOf(lunch, (r) => noiseRank(r.noise));
+      const morningNoise = avgOf(morning, (r) => noiseRank(r.noise)) || 0.25;
+      const noiseIncrease = Math.max(
+        0,
+        Math.round(((lunchNoise - morningNoise) / morningNoise) * 100),
+      );
+      const beforeNoonScore = avgOf(
+        DATA.filter((r) => new Date(r.date).getHours() < 12),
+        comfortScore,
+      );
+      const afterNoonScore = avgOf(
+        DATA.filter((r) => new Date(r.date).getHours() >= 12),
+        comfortScore,
+      );
+      const avgDiff = avgOf(
+        DATA.filter((r) => r.diff != null),
+        (r) => r.diff,
+      );
+      const worst = DATA.reduce((a, b) =>
+        comfortScore(b) < comfortScore(a) ? b : a,
+      );
+      const studyPct = Math.round(
+        (DATA.filter((r) => comfortScore(r) >= 60).length / DATA.length) * 100,
+      );
+
+      document.getElementById("advancedInsights").innerHTML = [
+        { metric: `${noiseIncrease}%`, copy: tx("lunchNoise") },
+        {
+          metric:
+            beforeNoonScore >= afterNoonScore
+              ? tx("beforeNoon")
+              : tx("afterNoon"),
+          copy: tx("bestDayPart"),
+        },
+        {
+          metric: `${avgDiff >= 0 ? "+" : ""}${avgDiff.toFixed(1)}°C`,
+          copy: tx("avgIndoorGap"),
+        },
+        {
+          metric: hourRange(new Date(worst.date).getHours()),
+          copy: tx("worstPeriod"),
+        },
+        { metric: `${studyPct}%`, copy: tx("studyShare") },
+      ]
+        .map(
+          (item) =>
+            `<div class="advanced-card card"><div class="metric">${item.metric}</div><div class="copy">${item.copy}</div></div>`,
+        )
+        .join("");
+
+      /* ---------------- Charts ---------------- */
+      Chart.defaults.font.family = "'Poppins', sans-serif";
+      Chart.defaults.color = "rgba(248,249,251,0.55)";
+      const gridColor = "rgba(255,255,255,0.05)";
+      const labels = DATA.map((d) => fmtHourLabel(d.date));
+
+      new Chart(document.getElementById("chartTemp"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: tx("atrium"),
+              data: DATA.map((d) => d.atrium_temp),
+              borderColor: "#7BBDE8",
+              backgroundColor: "rgba(123,189,232,0.12)",
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0,
+              borderWidth: 2,
+            },
+            {
+              label: tx("outside"),
+              data: DATA.map((d) => d.outside_temp),
+              borderColor: "#6EA2B3",
+              backgroundColor: "rgba(110,162,179,0.08)",
+              fill: true,
+              tension: 0.35,
+              pointRadius: 0,
+              borderWidth: 2,
+              spanGaps: true,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: "index" },
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { maxTicksLimit: 6, font: { size: 10 } },
+            },
+            y: { grid: { color: gridColor }, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+
+      const diffs = DATA.map((d) => d.diff);
+      new Chart(document.getElementById("chartDiff"), {
+        type: "bar",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: tx("gap"),
+              data: diffs,
+              backgroundColor: diffs.map((v) =>
+                v >= 0 ? "rgba(189,216,233,0.55)" : "rgba(78,142,162,0.55)",
+              ),
+              borderRadius: 3,
+              barThickness: 6,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { maxTicksLimit: 6, font: { size: 10 } },
+            },
+            y: { grid: { color: gridColor }, ticks: { font: { size: 10 } } },
+          },
+        },
+      });
+
+      new Chart(document.getElementById("chartNoise"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: tx("noise"),
+              data: DATA.map((d) => noiseRank(d.noise)),
+              borderColor: "#4E8EA2",
+              backgroundColor: "rgba(78,142,162,0.10)",
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              borderWidth: 2,
+              stepped: "middle",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { maxTicksLimit: 6, font: { size: 10 } },
+            },
+            y: {
+              min: 0,
+              max: 3,
+              grid: { color: gridColor },
+              ticks: {
+                stepSize: 1,
+                font: { size: 10 },
+                callback: (v) =>
+                  [tx("quiet"), tx("mildNoise"), tx("noisy"), tx("veryNoisy")][
+                    v
+                  ],
+              },
+            },
+          },
+        },
+      });
+
+      new Chart(document.getElementById("chartBright"), {
+        type: "line",
+        data: {
+          labels,
+          datasets: [
+            {
+              label: tx("brightness"),
+              data: DATA.map((d) => brightRank(d.brightness)),
+              borderColor: "#7BBDE8",
+              backgroundColor: "rgba(123,189,232,0.10)",
+              fill: true,
+              tension: 0.4,
+              pointRadius: 0,
+              borderWidth: 2,
+              stepped: "middle",
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { maxTicksLimit: 6, font: { size: 10 } },
+            },
+            y: {
+              min: 0,
+              max: 4,
+              grid: { color: gridColor },
+              ticks: {
+                stepSize: 1,
+                font: { size: 10 },
+                callback: (v) =>
+                  [
+                    tx("dark"),
+                    tx("dim"),
+                    tx("normalBrightness"),
+                    tx("bright"),
+                    tx("veryBright"),
+                  ][v],
+              },
+            },
+          },
+        },
+      });
+
+      /* ---------------- Tabs ---------------- */
+      const themeToggle = document.getElementById("themeToggle");
+      themeToggle.addEventListener("click", () => {
+        document.body.classList.toggle("light");
+        themeToggle.textContent = document.body.classList.contains("light")
+          ? tx("darkMode")
+          : tx("lightMode");
+      });
+
+      document.querySelectorAll("nav.tabs button").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          document
+            .querySelectorAll("nav.tabs button")
+            .forEach((b) => b.classList.remove("active"));
+          btn.classList.add("active");
+          document
+            .querySelectorAll(".view")
+            .forEach((v) => v.classList.remove("active"));
+          document
+            .getElementById("view-" + btn.dataset.view)
+            .classList.add("active");
+        });
+      });
+
+      /* ---------------- History table ---------------- */
+      const dateSet = [...new Set(DATA.map((d) => d.date.slice(0, 10)))].sort();
+      const fDate = document.getElementById("fDate");
+      dateSet.forEach((d) => {
+        const o = document.createElement("option");
+        o.value = d;
+        o.textContent = d;
+        fDate.appendChild(o);
+      });
+
+      let sortKey = "date",
+        sortDir = -1;
+      function renderHistory() {
+        const loc = document.getElementById("fLocation").value;
+        const dateVal = fDate.value;
+        const tMin = parseFloat(document.getElementById("fTempMin").value);
+        const tMax = parseFloat(document.getElementById("fTempMax").value);
+
+        let rows = DATA.filter((r) => {
+          if (dateVal !== "all" && !r.date.startsWith(dateVal)) return false;
+          if (!isNaN(tMin) && r.atrium_temp < tMin) return false;
+          if (!isNaN(tMax) && r.atrium_temp > tMax) return false;
+          return true;
+        });
+
+        rows = rows.slice().sort((a, b) => {
+          let av = a[sortKey],
+            bv = b[sortKey];
+          if (av == null) av = -Infinity;
+          if (bv == null) bv = -Infinity;
+          if (typeof av === "string" && sortKey !== "date") {
+            av = noiseRank(a.noise ?? a.brightness);
+            bv = noiseRank(b.noise ?? b.brightness);
+          }
+          if (av < bv) return -1 * sortDir;
+          if (av > bv) return 1 * sortDir;
+          return 0;
+        });
+
+        const tbody = document.getElementById("historyBody");
+        tbody.innerHTML = "";
+        document.getElementById("historyEmpty").style.display = rows.length
+          ? "none"
+          : "block";
+
+        rows.forEach((r) => {
+          const tr = document.createElement("tr");
+          const showAtrium = loc !== "outside";
+          const showOutside = loc !== "atrium";
+          tr.innerHTML = `
+      <td>${fmtTime(r.date)}</td>
+      <td>${showAtrium ? r.atrium_temp.toFixed(2) : "—"}</td>
+      <td>${showOutside && r.outside_temp != null ? r.outside_temp.toFixed(1) : "—"}</td>
+      <td>${r.diff != null ? (r.diff > 0 ? "+" : "") + r.diff.toFixed(1) : "—"}</td>
+      <td><span class="badge" style="background:${brightColor(r.brightness)}22; color:${brightColor(r.brightness)}">${localBright(r.brightness)}</span></td>
+      <td><span class="badge" style="background:${noiseColor(r.noise)}22; color:${noiseColor(r.noise)}">${localNoise(r.noise)}</span></td>`;
+          tbody.appendChild(tr);
+        });
+      }
+      ["fLocation", "fTempMin", "fTempMax"].forEach((id) =>
+        document.getElementById(id).addEventListener("input", renderHistory),
+      );
+      fDate.addEventListener("change", renderHistory);
+      document.querySelectorAll("thead th[data-sort]").forEach((th) => {
+        th.addEventListener("click", () => {
+          const key = th.dataset.sort;
+          if (sortKey === key) sortDir *= -1;
+          else {
+            sortKey = key;
+            sortDir = -1;
+          }
+          renderHistory();
+        });
+      });
+      renderHistory();
+
+      /* ---------------- Reports ---------------- */
+      let selectedType = null;
+      const reportOptions = document.querySelectorAll(".report-opt");
+      const submitBtn = document.getElementById("submitReport");
+      const reportNote = document.getElementById("reportNote");
+      const reportDetails = document.getElementById("reportDetails");
+
+      function syncReportDetails() {
+        if (!reportDetails) return;
+        const isOther = selectedType === "Other";
+        reportDetails.classList.toggle("active", isOther);
+        if (!isOther) reportDetails.value = "";
+      }
+
+      reportOptions.forEach((opt) => {
+        opt.addEventListener("click", () => {
+          reportOptions.forEach((o) => o.classList.remove("selected"));
+          opt.classList.add("selected");
+          selectedType = opt.dataset.type;
+          submitBtn.disabled = false;
+          syncReportDetails();
+          reportNote.textContent = tx("readySubmit", {
+            type: reportTypeLabel(selectedType),
+          });
+        });
+      });
+
+      const REPORT_TYPES = [
+        "Too Hot",
+        "Too Noisy",
+        "Too Bright",
+        "Too Dark",
+        "Comfortable",
+        "Other",
+      ];
+      const REPORT_COLORS = {
+        "Too Hot": "#FF9B7A",
+        "Too Noisy": "#FF9B7A",
+        "Too Bright": "#BDD8E9",
+        "Too Dark": "#49769F",
+        Comfortable: "#7EE0A8",
+        Other: "#7BBDE8",
+      };
+      const REPORT_ICONS = {
+        "Too Hot": "🥵",
+        "Too Noisy": "📢",
+        "Too Bright": "☀️",
+        "Too Dark": "🌑",
+        Comfortable: "✨",
+        Other: "💬",
+      };
+
+      async function loadReports() {
+        try {
+          const res = await window.storage.get("atriumiq:reports", true);
+          return res && res.value ? JSON.parse(res.value) : [];
+        } catch (e) {
+          return [];
+        }
+      }
+      async function saveReports(list) {
+        try {
+          await window.storage.set(
+            "atriumiq:reports",
+            JSON.stringify(list),
+            true,
+          );
+        } catch (e) {
+          console.error("Storage error", e);
+        }
+      }
+
+      function renderReportStats(list) {
+        const counts = {};
+        REPORT_TYPES.forEach((t) => (counts[t] = 0));
+        list.forEach((r) => {
+          if (counts[r.type] != null) counts[r.type]++;
+        });
+        const maxCount = Math.max(1, ...Object.values(counts));
+        const bars = document.getElementById("rsBars");
+        bars.innerHTML = REPORT_TYPES.map(
+          (t) => `
+    <div class="rs-row">
+      <div class="rs-label">${REPORT_ICONS[t]} ${reportTypeLabel(t)}</div>
+      <div class="rs-track"><div class="rs-fill" style="width:${(counts[t] / maxCount) * 100}%; background:${REPORT_COLORS[t]}"></div></div>
+      <div class="rs-count">${counts[t]}</div>
+    </div>`,
+        ).join("");
+
+        const feed = document.getElementById("rsFeed");
+        if (!list.length) {
+          feed.innerHTML = `<div class="table-empty">${tx("emptyReports")}</div>`;
+          return;
+        }
+        const recent = list.slice(-8).reverse();
+        feed.innerHTML = recent
+          .map(
+            (r) => `
+    <div class="rs-feed-item">
+      <span class="badge" style="background:${REPORT_COLORS[r.type]}22; color:${REPORT_COLORS[r.type]}">${REPORT_ICONS[r.type]} ${reportTypeLabel(r.type)}</span>
+      <span class="txt">${r.description || tx("atriumReport")}</span>
+      <span class="time">${fmtTime(r.time)}</span>
+      <button class="rs-delete" type="button" ${r.id ? `data-api-id="${r.id}"` : `data-report-time="${r.time}"`} aria-label="Delete report">×</button>
+    </div>`,
+          )
+          .join("");
+      }
+
+      document
+        .getElementById("rsFeed")
+        .addEventListener("click", async (event) => {
+          const button = event.target.closest(".rs-delete[data-report-time]");
+          if (!button || button.dataset.apiId) return;
+          const list = await loadReports();
+          const next = list.filter(
+            (report) => report.time !== button.dataset.reportTime,
+          );
+          await saveReports(next);
+          renderReportStats(next);
+        });
+
+      (async () => {
+        const list = await loadReports();
+        renderReportStats(list);
+      })();
+
+      submitBtn.addEventListener("click", async () => {
+        if (!selectedType) return;
+        const customDescription = reportDetails?.value.trim() || "";
+        if (selectedType === "Other" && !customDescription) {
+          reportNote.textContent = "Please write a short note for Other.";
+          reportDetails?.focus();
+          return;
+        }
+        submitBtn.disabled = true;
+        submitBtn.textContent = tx("submitting");
+        try {
+          const list = await loadReports();
+          list.push({
+            type: selectedType,
+            time: new Date().toISOString(),
+            description: customDescription || tx("atriumReport"),
+          });
+          await saveReports(list);
+          renderReportStats(list);
+          reportNote.textContent = tx("thanksReport");
+        } catch (e) {
+          reportNote.textContent = tx("failReport");
+        }
+        reportOptions.forEach((o) => o.classList.remove("selected"));
+        selectedType = null;
+        syncReportDetails();
+        submitBtn.textContent = tx("submitReport");
+        setTimeout(() => {
+          submitBtn.disabled = true;
+        }, 300);
+      });
+    </script>
+    <script>
+      (() => {
+        const API_BASE =
+          location.protocol === "file:" || location.port !== "8000"
+            ? "http://localhost:8000/api"
+            : "/api";
+        const statusPill = document.querySelector(".status-pill");
+        const statusText = statusPill?.childNodes[1];
+        const statusDot = statusPill?.querySelector(".dot");
+        let apiReportsWired = false;
+
+        function setApiStatus(text, ok = true) {
+          if (statusText) statusText.textContent = text;
+          if (statusDot) {
+            statusDot.style.background = ok ? "#5FE08A" : "#FF9B7A";
+            statusDot.style.boxShadow = ok
+              ? "0 0 8px #5FE08A"
+              : "0 0 8px #FF9B7A";
+          }
+        }
+
+        async function api(path, options) {
+          const res = await fetch(API_BASE + path, {
+            headers: { "Content-Type": "application/json" },
+            ...options,
+          });
+          if (!res.ok) throw new Error(`${res.status} ${res.statusText}`);
+          if (res.status === 204) return null;
+          return res.json();
+        }
+
+        function lightLabel(lux) {
+          if (lux < 150) return "Dark";
+          if (lux < 300) return "Dim";
+          if (lux < 520) return "Normal brightness";
+          if (lux < 750) return "Bright";
+          return "Very bright";
+        }
+
+        function noiseLabel(db) {
+          if (db < 40) return "Quiet";
+          if (db < 55) return "Mild noise";
+          if (db < 68) return "Noisy";
+          return "Very noisy";
+        }
+
+        function normalizeReading(r) {
+          return {
+            date: r.timestamp,
+            atrium_temp: r.atrium_temp,
+            outside_temp: r.outdoor_temp,
+            brightness: lightLabel(r.brightness_lux),
+            brightness_lux: r.brightness_lux,
+            noise: noiseLabel(r.noise_db),
+            noise_db: r.noise_db,
+            diff: +(r.outdoor_temp - r.atrium_temp).toFixed(1),
+            location: r.location,
+          };
+        }
+
+        function normalizeTrend(r) {
+          return {
+            date: r.timestamp,
+            atrium_temp: r.atrium,
+            outside_temp: r.outdoor,
+            brightness: lightLabel(r.light),
+            brightness_lux: r.light,
+            noise: noiseLabel(r.noise),
+            noise_db: r.noise,
+            diff: r.diff,
+          };
+        }
+
+        function renderLiveCurrent(current, history) {
+          const latest = normalizeReading(current.reading);
+          const prev = history[1] ? normalizeReading(history[1]) : latest;
+          const score = current.scores.overall;
+          const mood = moodForScore(score);
+          const breakdown = comfortBreakdown(latest);
+          const diff = current.temperature_diff;
+
+          document.documentElement.style.setProperty("--mood-a", mood.color);
+          document.documentElement.style.setProperty("--mood-b", mood.color2);
+          document.documentElement.style.setProperty("--mood-glow", mood.glow);
+          document.getElementById("comfortScore").textContent = score;
+          document.getElementById("gaugeNum").textContent = score;
+          const circumference = 2 * Math.PI * 78;
+          const arc = document.getElementById("gaugeArc");
+          arc.style.strokeDasharray = circumference;
+          arc.style.strokeDashoffset =
+            circumference - (score / 100) * circumference;
+
+          const statusEl = document.getElementById("comfortStatus");
+          statusEl.textContent = mood.name;
+          statusEl.style.color = mood.color;
+          statusEl.style.background = mood.color + "22";
+          document.getElementById("comfortDesc").textContent =
+            mood.copy + " " + mood.assistant;
+          document.getElementById("lastUpdated").textContent = tx(
+            "lastUpdated",
+            { time: fmtTime(latest.date) },
+          );
+          document.getElementById("decisionMain").textContent = mood.headline;
+          document.getElementById("decisionReason").textContent = tx(
+            "decisionReasonApi",
+            {
+              temp: latest.atrium_temp.toFixed(1),
+              noise: localNoise(latest.noise).toLowerCase(),
+              bright: localBright(latest.brightness).toLowerCase(),
+              diff: diff.toFixed(1),
+            },
+          );
+          document.getElementById("decisionPill").textContent =
+            mood.icon + " " + mood.decision;
+          document.getElementById("moodScore").textContent = score;
+          document.getElementById("moodName").textContent = mood.name;
+          document.getElementById("moodCopy").textContent = mood.copy;
+          document.getElementById("moodRange").textContent = mood.range;
+          document.getElementById("scoreTotal").textContent = score + "/100";
+
+          [
+            ["tempImpact", "tempImpactBar", breakdown.tempImpact, 45],
+            ["noiseImpact", "noiseImpactBar", breakdown.noiseImpact, 35],
+            ["brightImpact", "brightImpactBar", breakdown.brightImpact, 20],
+          ].forEach(([labelId, barId, value, max]) => {
+            document.getElementById(labelId).textContent = "+" + value;
+            document.getElementById(barId).style.width =
+              (value / max) * 100 + "%";
+          });
+
+          document.getElementById("valAtriumTemp").innerHTML =
+            latest.atrium_temp.toFixed(1) + "<small>°C</small>";
+          document.getElementById("valOutsideTemp").innerHTML =
+            latest.outside_temp.toFixed(1) + "<small>°C</small>";
+          document.getElementById("valNoise").textContent =
+            `${Math.round(latest.noise_db)} dB`;
+          document.getElementById("valBright").textContent =
+            `${Math.round(latest.brightness_lux)} lux`;
+          document.getElementById("valDiff").innerHTML =
+            (diff > 0 ? "+" : "") + diff.toFixed(1) + "<small>°C</small>";
+          trendBadge("trendAtrium", latest.atrium_temp, prev.atrium_temp, "°");
+          trendBadge(
+            "trendOutside",
+            latest.outside_temp,
+            prev.outside_temp,
+            "°",
+          );
+          trendBadge("trendDiff", latest.diff, prev.diff, "°");
+          document.getElementById("valNoiseTag").textContent = localNoise(
+            latest.noise,
+          );
+          document.getElementById("valNoiseTag").style.color = noiseColor(
+            latest.noise,
+          );
+          document.getElementById("valBrightTag").textContent = localBright(
+            latest.brightness,
+          );
+          document.getElementById("valBrightTag").style.color = brightColor(
+            latest.brightness,
+          );
+        }
+
+        function updateChart(canvasId, labels, datasets) {
+          const chart = Chart.getChart(document.getElementById(canvasId));
+          if (!chart) return;
+          chart.data.labels = labels;
+          datasets.forEach((data, index) => {
+            chart.data.datasets[index].data = data;
+          });
+          if (canvasId === "chartDiff") {
+            chart.data.datasets[0].backgroundColor = datasets[0].map((v) =>
+              v >= 0 ? "rgba(189,216,233,0.55)" : "rgba(78,142,162,0.55)",
+            );
+          }
+          chart.update();
+        }
+
+        function renderLiveAnalytics(trend, summary) {
+          const data = trend.map(normalizeTrend).slice(-40);
+          if (!data.length) return;
+          const labels = data.map((d) => fmtHourLabel(d.date));
+          document.getElementById("anMin").textContent =
+            summary.min_temp.toFixed(1) + "°C";
+          document.getElementById("anMax").textContent =
+            summary.max_temp.toFixed(1) + "°C";
+          document.getElementById("anAvg").textContent =
+            summary.avg_temp.toFixed(1) + "°C";
+
+          updateChart("chartTemp", labels, [
+            data.map((d) => d.atrium_temp),
+            data.map((d) => d.outside_temp),
+          ]);
+          updateChart("chartDiff", labels, [data.map((d) => d.diff)]);
+          updateChart("chartNoise", labels, [
+            data.map((d) => noiseRank(d.noise)),
+          ]);
+          updateChart("chartBright", labels, [
+            data.map((d) => brightRank(d.brightness)),
+          ]);
+        }
+
+        function renderLiveHistory(history) {
+          const rows = history.map(normalizeReading);
+          const fDate = document.getElementById("fDate");
+          [...new Set(rows.map((r) => r.date.slice(0, 10)))]
+            .sort()
+            .forEach((d) => {
+              if (![...fDate.options].some((o) => o.value === d)) {
+                const option = document.createElement("option");
+                option.value = d;
+                option.textContent = d;
+                fDate.appendChild(option);
+              }
+            });
+          const tbody = document.getElementById("historyBody");
+          tbody.innerHTML = rows
+            .map(
+              (r) => `
+      <tr>
+        <td>${fmtTime(r.date)}</td>
+        <td>${r.atrium_temp.toFixed(2)}</td>
+        <td>${r.outside_temp.toFixed(1)}</td>
+        <td>${r.diff >= 0 ? "+" : ""}${r.diff.toFixed(1)}</td>
+        <td><span class="badge" style="background:${brightColor(r.brightness)}22; color:${brightColor(r.brightness)}">${Math.round(r.brightness_lux)} lux · ${localBright(r.brightness)}</span></td>
+        <td><span class="badge" style="background:${noiseColor(r.noise)}22; color:${noiseColor(r.noise)}">${Math.round(r.noise_db)} dB · ${localNoise(r.noise)}</span></td>
+      </tr>`,
+            )
+            .join("");
+          document.getElementById("historyEmpty").style.display = rows.length
+            ? "none"
+            : "block";
+        }
+
+        function renderApiReports(reports, mood) {
+          const mapped = reports.map((r) => ({
+            id: r.id,
+            type: r.category,
+            time: r.timestamp,
+            description: r.description,
+            author: r.author,
+          }));
+          renderReportStats(mapped);
+          if (mood) {
+            const topIssue = REPORT_LABELS[mood.top_complaint]
+              ? reportTypeLabel(mood.top_complaint)
+              : mood.top_complaint;
+            document
+              .getElementById("rsFeed")
+              .insertAdjacentHTML(
+                "afterbegin",
+                `<div class="rs-feed-item"><span class="badge" style="background:#7BBDE822; color:#7BBDE8">${tx("liveMood")}</span><span class="txt">${tx("satisfaction", { rate: mood.satisfaction_rate, issue: topIssue })}</span><span class="time">${tx("reportCount", { count: mood.total_reports })}</span></div>`,
+              );
+          }
+        }
+
+        function wireApiReports() {
+          if (apiReportsWired) return;
+          apiReportsWired = true;
+          const oldButton = document.getElementById("submitReport");
+          const button = oldButton.cloneNode(true);
+          oldButton.replaceWith(button);
+          const reportOptions = document.querySelectorAll(".report-opt");
+          const reportNote = document.getElementById("reportNote");
+          const reportDetails = document.getElementById("reportDetails");
+          let selectedType = null;
+          function syncReportDetails() {
+            if (!reportDetails) return;
+            const isOther = selectedType === "Other";
+            reportDetails.classList.toggle("active", isOther);
+            if (!isOther) reportDetails.value = "";
+          }
+          reportOptions.forEach((opt) => {
+            opt.addEventListener("click", () => {
+              reportOptions.forEach((o) => o.classList.remove("selected"));
+              opt.classList.add("selected");
+              selectedType = opt.dataset.type;
+              button.disabled = false;
+              syncReportDetails();
+              reportNote.textContent = tx("readySubmitApi", {
+                type: reportTypeLabel(opt.dataset.type),
+              });
+            });
+          });
+          document
+            .getElementById("rsFeed")
+            .addEventListener("click", async (event) => {
+              const deleteButton = event.target.closest(".rs-delete[data-api-id]");
+              if (!deleteButton) return;
+              try {
+                await api(`/reports/${deleteButton.dataset.apiId}`, {
+                  method: "DELETE",
+                });
+                const [reports, mood] = await Promise.all([
+                  api("/reports"),
+                  api("/community-mood"),
+                ]);
+                renderApiReports(reports, mood);
+              } catch (err) {
+                reportNote.textContent = tx("failApi");
+              }
+            });
+          button.addEventListener("click", async () => {
+            const selected = document.querySelector(".report-opt.selected");
+            if (!selected) return;
+            const customDescription = reportDetails?.value.trim() || "";
+            if (selected.dataset.type === "Other" && !customDescription) {
+              reportNote.textContent = "Please write a short note for Other.";
+              reportDetails?.focus();
+              return;
+            }
+            button.disabled = true;
+            button.textContent = tx("submitting");
+            try {
+              await api("/reports", {
+                method: "POST",
+                body: JSON.stringify({
+                  category: selected.dataset.type,
+                  location: "Main Atrium",
+                  description:
+                    customDescription ||
+                    `Dashboard quick report: ${selected.dataset.type}`,
+                  author: "Dashboard visitor",
+                }),
+              });
+              const [reports, mood] = await Promise.all([
+                api("/reports"),
+                api("/community-mood"),
+              ]);
+              renderApiReports(reports, mood);
+              reportNote.textContent = tx("thanksApi");
+            } catch (err) {
+              reportNote.textContent = tx("failApi");
+            }
+            selected.classList.remove("selected");
+            selectedType = null;
+            syncReportDetails();
+            button.textContent = tx("submitReport");
+            button.disabled = true;
+          });
+        }
+
+        async function loadFastApiData() {
+          try {
+            setApiStatus(tx("connecting"), true);
+            const [current, trend, summary, history, reports, mood] =
+              await Promise.all([
+                api("/current"),
+                api("/analytics/trend?hours=168"),
+                api("/analytics/summary"),
+                api("/history?limit=100"),
+                api("/reports"),
+                api("/community-mood"),
+              ]);
+            renderLiveCurrent(current, history);
+            renderLiveAnalytics(trend, summary);
+            renderLiveHistory(history);
+            renderApiReports(reports, mood);
+            wireApiReports();
+            setApiStatus(tx("liveFastApi"), true);
+          } catch (err) {
+            console.warn(
+              "AtriumIQ FastAPI unavailable; keeping embedded demo data.",
+              err,
+            );
+            setApiStatus(tx("demoOffline"), false);
+          }
+        }
+
+        loadFastApiData();
+        setInterval(loadFastApiData, 60000);
+      })();
+    </script>
+    <script>
+      (() => {
+        const moods = [
+          {
+            key: "veryHappy",
+            min: 90,
+            image: "frontend/public/barsik/very-happy.png",
+            label: "VERY HAPPY",
+            emoji: "😸",
+            accent: "#7EE0A8",
+            messages: [
+              "Perfect conditions for studying! 📚",
+              "This is one of the best times to be here!",
+              "Everything looks great today!",
+            ],
+          },
+          {
+            key: "happy",
+            min: 70,
+            image: "frontend/public/barsik/happy.png",
+            label: "HAPPY",
+            emoji: "😊",
+            accent: "#7BBDE8",
+            messages: [
+              "Comfortable and quiet.",
+              "Looks like a good study session.",
+              "Nice conditions right now.",
+            ],
+          },
+          {
+            key: "neutral",
+            min: 50,
+            image: "frontend/public/barsik/neutral.png",
+            label: "NEUTRAL",
+            emoji: "😐",
+            accent: "#BDD8E9",
+            messages: [
+              "Conditions are acceptable.",
+              "Not bad, but it could be better.",
+              "Still suitable for most activities.",
+            ],
+          },
+          {
+            key: "hot",
+            min: 35,
+            image: "frontend/public/barsik/hot.png",
+            label: "HOT / UNCOMFORTABLE",
+            emoji: "🥵",
+            accent: "#FFB15C",
+            messages: [
+              "It's getting warm in here.",
+              "You may feel a bit uncomfortable.",
+              "Consider taking a short break.",
+            ],
+          },
+          {
+            key: "concerned",
+            min: 20,
+            image: "frontend/public/barsik/concerned.png",
+            label: "CONCERNED",
+            emoji: "😟",
+            accent: "#FBBF24",
+            messages: [
+              "Noise or temperature is becoming an issue.",
+              "Not ideal for focused studying.",
+              "Conditions are getting worse.",
+            ],
+          },
+          {
+            key: "worried",
+            min: 0,
+            image: "frontend/public/barsik/worried.png",
+            label: "WORRIED",
+            emoji: "😿",
+            accent: "#F87171",
+            messages: [
+              "I wouldn't recommend studying here right now.",
+              "Try coming back later.",
+              "Current conditions are uncomfortable.",
+            ],
+          },
+        ];
+
+        function getScore() {
+          const value = parseInt(
+            document.getElementById("comfortScore")?.textContent || "50",
+            10,
+          );
+          return Number.isFinite(value)
+            ? Math.max(0, Math.min(100, value))
+            : 50;
+        }
+        function getMood(score) {
+          return (
+            moods.find((mood) => score >= mood.min) || moods[moods.length - 1]
+          );
+        }
+        function pickMessage(mood, score, status) {
+          const seed = `${score}-${status}`
+            .split("")
+            .reduce((sum, char) => sum + char.charCodeAt(0), 0);
+          return mood.messages[seed % mood.messages.length];
+        }
+        function makeIntroClass() {
+          const seen = sessionStorage.getItem("barsik-intro-seen") === "true";
+          if (!seen) sessionStorage.setItem("barsik-intro-seen", "true");
+          return seen ? "" : " intro";
+        }
+        function createBarsik() {
+          if (document.getElementById("barsikAssistant")) return;
+          const shell = document.createElement("aside");
+          shell.id = "barsikAssistant";
+          shell.className = "barsik-assistant" + makeIntroClass();
+          shell.setAttribute("aria-label", "Barsik comfort assistant");
+          shell.innerHTML = `
+      <div class="barsik-bubble">
+        <div class="barsik-kicker">Barsik</div>
+        <div class="barsik-message" id="barsikMessage">📚 Great for studying right now!</div>
+        <div class="barsik-insight"><span>🏆</span><span id="barsikScoreLine">Current comfort score: --/100</span></div>
+        <div class="barsik-insight"><span>✨</span><span id="barsikRecommendation">Checking current recommendation...</span></div>
+      </div>
+      <div class="barsik-mascot neutral" id="barsikMascot">
+        <img id="barsikImage" src="frontend/public/barsik/neutral.png" alt="Barsik mascot" draggable="false">
+      </div>`;
+          document.body.appendChild(shell);
+        }
+        function updateBarsik() {
+          createBarsik();
+          const score = getScore();
+          const status =
+            document.getElementById("comfortStatus")?.textContent?.trim() ||
+            "Comfort status";
+          const recommendation =
+            document.getElementById("decisionMain")?.textContent?.trim() ||
+            document.getElementById("comfortDesc")?.textContent?.trim() ||
+            "📚 Great for studying right now!";
+          const mood = getMood(score);
+          const mascot = document.getElementById("barsikMascot");
+          const image = document.getElementById("barsikImage");
+          const message = document.getElementById("barsikMessage");
+          const scoreLine = document.getElementById("barsikScoreLine");
+          const recLine = document.getElementById("barsikRecommendation");
+          if (!mascot || !image || !message || !scoreLine || !recLine) return;
+          mascot.className = "barsik-mascot " + mood.key;
+          mascot
+            .querySelectorAll(".barsik-sparkle,.barsik-sweat,.barsik-warning")
+            .forEach((el) => el.remove());
+          if (mood.key === "veryHappy") {
+            mascot.insertAdjacentHTML(
+              "beforeend",
+              '<span class="barsik-sparkle s1">✨</span><span class="barsik-sparkle s2">✨</span>',
+            );
+          }
+          if (mood.key === "hot") {
+            mascot.insertAdjacentHTML(
+              "beforeend",
+              '<span class="barsik-sweat">💧</span>',
+            );
+          }
+          if (mood.key === "worried") {
+            mascot.insertAdjacentHTML(
+              "beforeend",
+              '<span class="barsik-warning"></span>',
+            );
+          }
+          image.src = mood.image;
+          image.alt = "Barsik " + mood.label.toLowerCase() + " mascot";
+          message.textContent =
+            mood.emoji + " " + pickMessage(mood, score, status);
+          scoreLine.textContent = "Current comfort score: " + score + "/100";
+          recLine.textContent = recommendation;
+          document
+            .querySelector(".barsik-bubble")
+            ?.style.setProperty("box-shadow", `0 18px 46px ${mood.accent}22`);
+        }
+
+        updateBarsik();
+        [
+          "comfortScore",
+          "comfortStatus",
+          "decisionMain",
+          "comfortDesc",
+        ].forEach((id) => {
+          const el = document.getElementById(id);
+          if (el)
+            new MutationObserver(updateBarsik).observe(el, {
+              childList: true,
+              characterData: true,
+              subtree: true,
+            });
+        });
+      })();
+    </script>
+  </body>
+</html>
